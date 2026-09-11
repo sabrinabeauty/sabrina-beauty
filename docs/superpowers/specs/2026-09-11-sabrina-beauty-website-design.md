@@ -33,31 +33,53 @@ This is a real client project. The site must be built locally, at zero cost, ful
 
 ## Content Migrated From Current Site
 
-Source: https://www.samarbeauty.co.uk (crawled 2026-09-11)
+Source: https://www.samarbeauty.co.uk — full site crawled and cross-checked 2026-09-11 against `/sitemap.xml`, which confirms exactly 4 pages exist (Home, Brows & Facials Treatments, About, Book Online). No other pages, shop/product pages, blog, or gift-card pages exist on the current site.
 
-**Tagline:** "Your sanctuary for luxurious, results-focused facial treatments"
+**Tagline:** "Your sanctuary for luxurious, results-focused facial treatments designed to enhance your natural beauty"
 
-**Brand philosophy:** Vegan, cruelty-free, "plant-powered skincare philosophy," combines "carefully selected botanical ingredients with professional skincare techniques to nourish, refresh and enhance your skin's natural radiance." Treatments are "thoughtfully tailored to your individual skin needs."
+**Home page copy (verbatim):**
+- Heading: "Welcome to Sabrina beauty"
+- "At Sabrina beauty, we combine carefully selected vegan botanicals with deep hydration and expert skincare techniques to support healthy, radiant-looking skin. Each treatment is thoughtfully tailored to your individual skin needs, creating a relaxing experience while helping you achieve a fresh, natural glow."
+- "Discover your most radiant self with sabrina beauty"
+- Section heading: "Where Glowing Skin Begins"
+- "At Sabrina beauty, we believe skincare should nourish both your skin and your confidence. We carefully choose vegan, cruelty-free, plant-powered products to support healthy, radiant-looking skin while respecting nature"
+- Brand attributes strip: "Vegan • Cruelty-Free • Professional Care"
 
-**Facial treatments:**
-| Treatment | Price | Duration | Notes |
+**About page copy (verbatim):**
+- Heading: "Our story, your glow"
+- "Sabrina beauty was born from a passion for skincare and a belief that beautiful skin begins with thoughtful, personalised care."
+- "Our approach combines carefully selected botanical ingredients with professional skincare techniques to nourish, refresh and enhance your skin's natural radiance."
+- "Every treatment is designed with care, creating a relaxing experience that leaves your skin feeling" — sentence is cut off/incomplete on the current site; will need finishing copy for the new site (flagged below).
+- No founder bio, credentials, or formal mission statement exist on the current site beyond the above.
+
+**Facial treatments** (all copy verbatim from current site):
+| Treatment | Price | Duration | Description | Best for |
+|---|---|---|---|---|
+| HydraDermabrasion | £140 | 70 min | "Using advanced technology, this treatment gently resurfaces, deeply cleanses, and infuses nourishment deep into your skin — all in one soothing session." Anti-Aging serum. | Fine lines & dullness, dry or dehydrated skin, oily & congested pores, sun-damaged or uneven texture |
+| Botanical Skin Lift Facial | £165 | 90 min | "Non-surgical lifting combining advanced technology with facial massage. Lifts, sculpts, firms, and defines contours for a naturally refreshed, youthful glow." Korean lift serum. | Mature, sagging, tired or dry skin, loss of firmness, fine lines |
+| Pro Hydra-Glow Facial | £185 | 90 min | "Everything in Deluxe + custom booster serums, LED light therapy, and lymphatic drainage. Deep repair, brightening, and de-puffing." Salmon DNA serum. | Dull, sun-damaged, tired, uneven texture or mature skin |
+| Dermaplaning Glow Facial | £90 | 60 min | "Gently removes dead skin and fine hairs. Instantly smooths texture, helps products absorb deeply, leaves skin flawless." | Dull, dry, uneven texture, all skin types except active breakouts |
+| Classic Cleanse & Glow Facial | £75 | 60 min | "Gentle cleanse, exfoliation, massage and hydration. Perfect for maintenance — balanced, fresh, healthy skin." | Normal, balanced or sensitive skin, first-time clients, regular maintenance |
+| Deep Purifying Facial | £110 | 60 min | "Targets clogged pores, excess oil and impurities. Balances congested skin gently and effectively." | Oily, combination, congested or blemish-prone skin, enlarged pores, excess oil, blackheads & whiteheads |
+| Back Exfoliation | £45 | 35 min | "A deep cleansing back treatment with exfoliation to remove dead skin cells, smooth and refresh the skin. Includes cleanse, exfoliation and hydration." | — |
+
+Note: "Pro Hydra-Glow Facial" copy references "Everything in Deluxe" — the current site does not actually have a treatment named "Deluxe," so this is a leftover/inconsistency in the source content. The new site should rewrite this line to stand alone rather than copying the dangling reference.
+
+**Brow treatments** (all copy verbatim from current site):
+| Treatment | Price | Duration | Description |
 |---|---|---|---|
-| HydraDermabrasion | £140 | 70 min | Six-step resurfacing + anti-aging serum infusion; fine lines, dullness, dehydration, congestion, sun damage |
-| Botanical Skin Lift Facial | £165 | 90 min | Non-surgical lift + Korean lift serum; mature/sagging/tired skin |
-| Pro Hydra-Glow Facial | £185 | 90 min | Booster serums, LED light therapy, lymphatic drainage, Salmon DNA serum; dull/sun-damaged/mature skin |
-| Dermaplaning Glow Facial | £90 | 60 min | Removes dead skin/fine hairs; all skin types except active breakouts |
-| Classic Cleanse & Glow Facial | £75 | 60 min | Maintenance facial; balanced/sensitive skin, first-timers |
-| Deep Purifying Facial | £110 | 60 min | Extractions, oil/impurity control; oily/combination/blemish-prone skin |
-| Back Exfoliation | £45 | 35 min | Deep-cleansing back treatment |
+| Brow Shape | £18 | 15 min | "Expertly shapes your brows using precision waxing for a clean, defined and lifted look." |
+| Brow Tinting | £18 | 15 min | "Adds colour and depth to your brows with a custom tint for a natural yet fuller appearance." |
+| Brow Tinting & Shape | £30 | 20 min | "Combines tinting and shaping to enhance, define and perfect your brows." |
+| Brow Lamination | £60 | 45 min | "Smooths and lifts brow hairs into place for a fuller, fluffier and long-lasting finish." |
+| Complete Brow Lamination | £75 | 60 min | "LAMINATION + TINT + SHAPING + WAXING. The ultimate all-in-one treatment for perfectly groomed brows." **Patch test required at least 24 hours before appointment.** |
 
-**Brow treatments:**
-| Treatment | Price | Duration | Notes |
-|---|---|---|---|
-| Brow Shape | £18 | 15 min | Precision waxing |
-| Brow Tinting | £18 | 15 min | Custom tint |
-| Brow Tinting & Shape | £30 | 20 min | Combined |
-| Brow Lamination | £60 | 45 min | Smooths/lifts for fuller finish |
-| Complete Brow Lamination | £75 | 60 min | Lamination + tint + shaping + waxing; 24hr patch test required |
+**Book Online page copy (verbatim):**
+- Heading: "Book your pampering facial online"
+- "Booking your facial with Botanical Essence is simple. Choose your treatment, pick a convenient date and time, and leave the rest to us. Enjoy a clean, relaxing journey toward healthier skin and a radiant, natural glow." (Note: source text still refers to the old "Botanical Essence" name in places — another inconsistency on the current site, to be fully replaced with "Sabrina Beauty" on the new site.)
+- Booking process steps: 1) "Choose your desired facial treatment." 2) "Select your preferred date and time." 3) "Fill in a simple form with your details." 4) "Confirm your appointment for a radiant glow!"
+- A section headed "Our location" exists but contains no address/map — only social links and the company registration line. Confirms no physical address exists anywhere on the site.
+- No cancellation policy, rescheduling policy, deposit/payment terms, or formal T&Cs appear anywhere on the current site.
 
 **Contact info (to carry over as-is):**
 - Email: info@s1botanicals.co.uk
@@ -65,9 +87,12 @@ Source: https://www.samarbeauty.co.uk (crawled 2026-09-11)
 - Instagram: instagram.com/Sabrinabeauty.studioo
 - TikTok: tiktok.com/@botanicalessence7
 - Facebook: facebook.com/Sabrinabeauty7
-- No physical address or opening hours published — omit from new site.
+- No physical address or opening hours published anywhere on the current site — omit from new site.
+- Footer on every page: "S1 Botanicals Ltd 17182720" / "Powered by Webador" (the Webador attribution is not carried over — it's the current site builder's own branding, not the salon's).
 
 Decision: keep the existing contact email/phone for now; the salon will update these later once rebranded contact details exist.
+
+**Flag:** the About page's final sentence is cut off mid-thought on the current site ("...leaves your skin feeling"). The new site needs original finishing copy here rather than a literal migration, since there's nothing further to copy.
 
 ## Pages
 
