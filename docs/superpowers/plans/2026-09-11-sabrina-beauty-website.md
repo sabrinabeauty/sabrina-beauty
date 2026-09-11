@@ -1610,7 +1610,7 @@ git commit -m "Build booking page with live availability and confirmation flow"
 - Create: `app/api/admin/login/route.ts`, `app/api/admin/logout/route.ts`, `app/admin/page.tsx`
 
 **Interfaces:**
-- Consumes: `verifyPassword`, `createSessionToken`, `SESSION_COOKIE_NAME` from `lib/auth.ts`.
+- Consumes: `verifyPassword`, `createSessionToken`, `SESSION_COOKIE_NAME` from `lib/auth.ts`. **Note: `createSessionToken()` and `verifySessionToken()` are `async` (they use the Web Crypto API so `lib/auth.ts` works in both the Node runtime and Next.js Edge middleware) — the plan snippets below already reflect this; make sure to `await createSessionToken()`.**
 
 - [ ] **Step 1: Implement `app/api/admin/login/route.ts`**
 
@@ -1626,7 +1626,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: false }, { status: 401 })
   }
   const res = NextResponse.json({ ok: true })
-  res.cookies.set(SESSION_COOKIE_NAME, createSessionToken(), {
+  res.cookies.set(SESSION_COOKIE_NAME, await createSessionToken(), {
     httpOnly: true,
     sameSite: 'lax',
     path: '/',
