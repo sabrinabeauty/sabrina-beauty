@@ -21,9 +21,15 @@ export default function BookingForm() {
       setSlots([])
       return
     }
+    let cancelled = false
     fetch(`/api/availability?serviceId=${serviceId}&date=${date}`)
       .then((r) => r.json())
-      .then(setSlots)
+      .then((data) => {
+        if (!cancelled) setSlots(data)
+      })
+    return () => {
+      cancelled = true
+    }
   }, [serviceId, date])
 
   async function handleSubmit(e: React.FormEvent) {
