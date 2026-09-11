@@ -1,36 +1,47 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Sabrina Beauty Website
 
-## Getting Started
+Local, self-contained Next.js site for Sabrina Beauty (skincare, facials, spa treatments, and brow treatments). Rebuilt from the previous Samar Beauty site with a new "modern luxury spa" design, a custom booking system, and an admin dashboard.
 
-First, run the development server:
+## Setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.local.example .env.local
+npm run hash-password -- "your-chosen-admin-password"
+# paste the printed hash into .env.local as ADMIN_PASSWORD_HASH
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**Important:** the bcrypt hash contains literal `$` characters (e.g. `$2b$10$...`). Next.js expands `$VAR`-style references in `.env` files, which will silently corrupt an unescaped hash and break admin login. Escape every `$` as `\$` in `.env.local`, e.g.:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+ADMIN_PASSWORD_HASH=\$2b\$10\$XUWTFjp.zibJJMsa/Js9R.IsNqk.VqYSxUwuvpR/snZl/NXsZRaua
+SESSION_SECRET=some-long-random-string
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Then seed the treatment menu and start the dev server:
 
-## Learn More
+```bash
+npm run seed   # seeds the 12-item treatment menu into data/sabrina.db
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+Visit http://localhost:3000. Admin dashboard: http://localhost:3000/admin.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Testing
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm test
+```
 
-## Deploy on Vercel
+## Deploying later
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+This is a standard Next.js app — deployable to any Node-capable host (Vercel, Netlify, Render, etc.).
+Swap `data/sabrina.db` (SQLite) for a hosted database if the target host requires it; the data-access
+functions in `lib/services.ts` and `lib/bookings.ts` are the only places that would need updating.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Known gaps (by design, deferred)
+
+- No online payment / product sales.
+- No automated email confirmations (booking shows an on-screen confirmation only).
+- No physical address or opening hours shown — none exist yet for the business.
+- Contact email/phone are carried over from the old site (`info@s1botanicals.co.uk`) until the salon has rebranded contact details.
