@@ -15,9 +15,9 @@ describe('auth', () => {
 
   it('createSessionToken produces a token verifySessionToken accepts, and rejects a tampered token', async () => {
     const { createSessionToken, verifySessionToken } = await import('../../lib/auth')
-    const token = createSessionToken()
-    expect(verifySessionToken(token)).toBe(true)
-    expect(verifySessionToken(token + 'x')).toBe(false)
-    expect(verifySessionToken(undefined)).toBe(false)
+    const token = await createSessionToken()
+    expect(await verifySessionToken(token)).toBe(true)
+    expect(await verifySessionToken(token + 'x')).toBe(false)
+    expect(await verifySessionToken(undefined)).toBe(false)
   })
 })
