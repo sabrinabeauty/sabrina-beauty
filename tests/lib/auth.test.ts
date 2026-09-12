@@ -5,6 +5,7 @@ import fs from 'node:fs'
 const TEST_DB_PATH = path.join(process.cwd(), 'data', 'test-auth.db')
 
 beforeEach(async () => {
+  process.env.SESSION_SECRET = 'test-secret'
   process.env.SABRINA_DB_PATH = TEST_DB_PATH
   if (fs.existsSync(TEST_DB_PATH)) fs.unlinkSync(TEST_DB_PATH)
   const { resetDbForTests } = await import('../../lib/db')

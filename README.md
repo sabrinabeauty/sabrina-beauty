@@ -6,6 +6,9 @@ Local, self-contained Next.js site for Sabrina Beauty (skincare, facials, spa tr
 
 ```bash
 npm install
+cp .env.local.example .env.local
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+# paste the output into .env.local as SESSION_SECRET=... (one-time; see note below)
 npm run seed            # seeds the 12-item treatment menu into data/sabrina.db
 npm run seed-products   # seeds 3 demo skincare products (real names/prices are placeholders)
 npm run dev
@@ -13,10 +16,17 @@ npm run dev
 
 Visit http://localhost:3000. Admin dashboard: http://localhost:3000/admin.
 
-**No password is pre-configured.** The first time anyone visits `/admin`, they're prompted to set
-one — it's stored (hashed) in `data/sabrina.db`, not in an env file, so there's nothing to
-hand-configure or accidentally corrupt. It can be changed later from the dashboard itself
-("Change Admin Password"). If you ever get locked out entirely, reset it directly:
+**Why `SESSION_SECRET` is required but the password isn't:** the admin *password* is fully
+self-service — the first time anyone visits `/admin`, they're prompted to set one, stored (hashed)
+in `data/sabrina.db`. `SESSION_SECRET` is different: it signs login sessions, and Next.js runs
+`middleware.ts` (which checks sessions) in a separate Edge runtime from the API routes (which issue
+them) — two isolated processes that share no memory. Without a real shared secret in the
+environment both can read, every login would silently fail verification. It's a plain random string
+with no special characters, so — unlike a bcrypt hash — there's no escaping footgun; generate it
+once and forget about it.
+
+Change the admin password anytime from the dashboard itself ("Change Admin Password"). If you ever
+get locked out entirely, reset it directly:
 
 ```bash
 npm run reset-admin-password -- "a-new-password"

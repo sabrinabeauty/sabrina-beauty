@@ -4,7 +4,7 @@ import { useState } from 'react'
 
 export default function AdminChangePassword() {
   const [password, setPassword] = useState('')
-  const [confirm, setConfirm] = useState('')
+  const [reveal, setReveal] = useState(false)
   const [status, setStatus] = useState<'idle' | 'saving' | 'done'>('idle')
   const [error, setError] = useState('')
 
@@ -14,10 +14,6 @@ export default function AdminChangePassword() {
 
     if (password.length < 8) {
       setError('Password must be at least 8 characters.')
-      return
-    }
-    if (password !== confirm) {
-      setError('Passwords don’t match.')
       return
     }
 
@@ -35,7 +31,6 @@ export default function AdminChangePassword() {
     }
 
     setPassword('')
-    setConfirm('')
     setStatus('done')
   }
 
@@ -45,23 +40,23 @@ export default function AdminChangePassword() {
       <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-4">
         <div>
           <label className="block mb-1 text-sm font-medium">New password</label>
-          <input
-            type="password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="border border-sage/40 rounded px-3 py-2"
-          />
-        </div>
-        <div>
-          <label className="block mb-1 text-sm font-medium">Confirm</label>
-          <input
-            type="password"
-            required
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            className="border border-sage/40 rounded px-3 py-2"
-          />
+          <div className="relative">
+            <input
+              type={reveal ? 'text' : 'password'}
+              required
+              autoComplete="new-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="border border-sage/40 rounded px-3 py-2 pr-14"
+            />
+            <button
+              type="button"
+              onClick={() => setReveal((v) => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-sage font-medium"
+            >
+              {reveal ? 'Hide' : 'Show'}
+            </button>
+          </div>
         </div>
         <button
           type="submit"

@@ -8,19 +8,20 @@
 export const SESSION_COOKIE_NAME = 'sabrina_admin_session'
 const SESSION_TTL_MS = 1000 * 60 * 60 * 12 // 12 hours
 
-// Not backed by the database, for the same Edge-runtime reason as above. Falls back
-// to an in-memory value generated once per server process if SESSION_SECRET isn't
-// set — fine for a single-operator admin panel (existing sessions just expire on
-// restart).
-let inMemorySessionSecret: string | null = null
-
+// Must come from an env var, not generated in-memory: middleware.ts (Edge runtime)
+// and the API routes (Node.js runtime) are separate JS isolates that do NOT share
+// module-level variables, so each would generate its own random secret and every
+// token would fail cross-runtime verification. A plain random hex string has no
+// special characters, so — unlike the old bcrypt-hash-in-env approach — there's no
+// escaping footgun; see README for the one-line setup command.
 function getSessionSecret(): string {
-  if (process.env.SESSION_SECRET) return process.env.SESSION_SECRET
-  if (!inMemorySessionSecret) {
-    const bytes = crypto.getRandomValues(new Uint8Array(32))
-    inMemorySessionSecret = Array.from(bytes).map((b) => b.toString(16).padStart(2, '0')).join('')
+  const secret = process.env.SESSION_SECRET
+  if (!secret) {
+    throw new Error(
+      'SESSION_SECRET is not set. Run: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))" and put the output in .env.local as SESSION_SECRET=...'
+    )
   }
-  return inMemorySessionSecret
+  return secret
 }
 
 // Uses the Web Crypto API (globalThis.crypto.subtle) rather than node:crypto so this
