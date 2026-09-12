@@ -10,6 +10,7 @@
     "test": "vitest run",
     "seed": "tsx scripts/seed.ts",
     "seed-products": "tsx scripts/seed-products.ts",
+    "seed-faqs": "tsx scripts/seed-faqs.ts",
     "reset-admin-password": "tsx scripts/reset-admin-password.ts"
   },
   "dependencies": {

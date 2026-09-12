@@ -3,7 +3,7 @@ import { saveUploadedImage } from '@/lib/upload'
 
 export async function POST(request: NextRequest) {
   const formData = await request.formData()
-  const result = await saveUploadedImage(formData.get('file'), 'products')
+  const result = await saveUploadedImage(formData.get('file'), 'gallery')
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: 400 })
   }

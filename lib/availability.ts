@@ -1,14 +1,5 @@
 import { getDb } from './db'
-
-export const WORKING_HOURS: Record<number, { start: string; end: string } | null> = {
-  0: null, // Sunday closed
-  1: null, // Monday closed
-  2: { start: '09:00', end: '17:30' },
-  3: { start: '09:00', end: '17:30' },
-  4: { start: '09:00', end: '17:30' },
-  5: { start: '09:00', end: '17:30' },
-  6: { start: '09:00', end: '17:30' },
-}
+import { getSiteContent } from './settings'
 
 const SLOT_STEP_MINUTES = 30
 
@@ -25,7 +16,7 @@ function toHHMM(mins: number): string {
 
 export function generateSlots(date: string, durationMinutes: number): string[] {
   const weekday = new Date(`${date}T00:00:00`).getDay()
-  const hours = WORKING_HOURS[weekday]
+  const hours = getSiteContent().workingHours[weekday]
   if (!hours) return []
 
   const start = toMinutes(hours.start)

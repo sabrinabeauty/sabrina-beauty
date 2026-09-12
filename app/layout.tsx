@@ -4,6 +4,15 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import StickyBookBar from "@/components/StickyBookBar";
+import AnnouncementBanner from "@/components/AnnouncementBanner";
+
+// Every page in this app reads admin-editable content (contact info, announcement
+// banner, hero text, etc.) via Header/Footer/page bodies, which touch the SQLite
+// database directly. Forcing the whole app dynamic here — once, in the root layout —
+// means every route always reflects the latest admin changes, rather than each new
+// page needing its own `export const dynamic = 'force-dynamic'` remembered
+// individually (a mistake that already caused stale-content bugs earlier).
+export const dynamic = "force-dynamic";
 
 const serif = Cormorant_Garamond({
   subsets: ["latin"],
@@ -32,6 +41,7 @@ export default function RootLayout({
       <body
         className={`${serif.variable} ${sans.variable} font-sans bg-cream text-charcoal`}
       >
+        <AnnouncementBanner />
         <Header />
         <main className="pb-20 md:pb-0">{children}</main>
         <Footer />

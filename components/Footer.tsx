@@ -1,4 +1,10 @@
+import { getSiteContent } from '@/lib/settings'
+
 export default function Footer() {
+  const { contactEmail, contactWhatsapp, contactInstagram, contactTiktok, contactFacebook } =
+    getSiteContent()
+  const whatsappDigits = contactWhatsapp.replace(/[^\d]/g, '')
+
   return (
     <footer className="bg-charcoal text-cream mt-24">
       <div className="max-w-6xl mx-auto px-6 py-12 grid gap-8 sm:grid-cols-3 text-sm">
@@ -10,35 +16,43 @@ export default function Footer() {
           <h4 className="font-medium mb-3">Get in touch</h4>
           <ul className="space-y-2 text-cream/70">
             <li>
-              <a href="mailto:info@s1botanicals.co.uk" className="hover:text-blush">
-                info@s1botanicals.co.uk
+              <a href={`mailto:${contactEmail}`} className="hover:text-blush">
+                {contactEmail}
               </a>
             </li>
-            <li>
-              <a href="https://api.whatsapp.com/send?phone=447494700707" className="hover:text-blush">
-                WhatsApp: +44 7494 700707
-              </a>
-            </li>
+            {whatsappDigits && (
+              <li>
+                <a href={`https://api.whatsapp.com/send?phone=${whatsappDigits}`} className="hover:text-blush">
+                  WhatsApp: {contactWhatsapp}
+                </a>
+              </li>
+            )}
           </ul>
         </div>
         <div>
           <h4 className="font-medium mb-3">Follow</h4>
           <ul className="space-y-2 text-cream/70">
-            <li>
-              <a href="https://instagram.com/Sabrinabeauty.studioo" className="hover:text-blush">
-                Instagram
-              </a>
-            </li>
-            <li>
-              <a href="https://tiktok.com/@botanicalessence7" className="hover:text-blush">
-                TikTok
-              </a>
-            </li>
-            <li>
-              <a href="https://facebook.com/Sabrinabeauty7" className="hover:text-blush">
-                Facebook
-              </a>
-            </li>
+            {contactInstagram && (
+              <li>
+                <a href={contactInstagram} className="hover:text-blush">
+                  Instagram
+                </a>
+              </li>
+            )}
+            {contactTiktok && (
+              <li>
+                <a href={contactTiktok} className="hover:text-blush">
+                  TikTok
+                </a>
+              </li>
+            )}
+            {contactFacebook && (
+              <li>
+                <a href={contactFacebook} className="hover:text-blush">
+                  Facebook
+                </a>
+              </li>
+            )}
           </ul>
         </div>
       </div>
@@ -46,5 +60,5 @@ export default function Footer() {
         S1 Botanicals Ltd · Company No. 17182720
       </div>
     </footer>
-  );
+  )
 }

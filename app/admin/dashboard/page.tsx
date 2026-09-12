@@ -6,6 +6,11 @@ import type { Booking } from '@/lib/bookings'
 import type { Service } from '@/lib/services'
 import AdminProductsSection from '@/components/AdminProductsSection'
 import AdminChangePassword from '@/components/AdminChangePassword'
+import AdminSiteContentSection from '@/components/AdminSiteContentSection'
+import AdminAvailabilitySection from '@/components/AdminAvailabilitySection'
+import AdminFaqSection from '@/components/AdminFaqSection'
+import AdminTestimonialsSection from '@/components/AdminTestimonialsSection'
+import AdminGallerySection from '@/components/AdminGallerySection'
 
 export default function AdminDashboard() {
   const [bookings, setBookings] = useState<Booking[]>([])
@@ -316,6 +321,26 @@ export default function AdminDashboard() {
       <hr className="my-16 border-sage/20" />
 
       <AdminProductsSection />
+
+      <hr className="my-16 border-sage/20" />
+
+      <AdminAvailabilitySection />
+
+      <hr className="my-16 border-sage/20" />
+
+      <AdminSiteContentSection />
+
+      <hr className="my-16 border-sage/20" />
+
+      <AdminFaqSection />
+
+      <hr className="my-16 border-sage/20" />
+
+      <AdminTestimonialsSection />
+
+      <hr className="my-16 border-sage/20" />
+
+      <AdminGallerySection />
     </div>
   )
 }

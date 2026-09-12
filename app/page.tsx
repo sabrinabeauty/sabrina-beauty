@@ -1,6 +1,7 @@
 // app/page.tsx
 import Link from 'next/link'
 import InstagramFollow from '@/components/InstagramFollow'
+import TestimonialsSection from '@/components/TestimonialsSection'
 import HeroOriginal from '@/components/HeroOriginal'
 import HeroNew from '@/components/HeroNew'
 import { getHomepageVariant } from '@/lib/settings'
@@ -31,6 +32,8 @@ export default function HomePage() {
           Explore our full treatment menu &rarr;
         </Link>
       </section>
+
+      <TestimonialsSection />
 
       <InstagramFollow />
     </>
