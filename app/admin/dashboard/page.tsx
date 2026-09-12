@@ -11,6 +11,15 @@ export default function AdminDashboard() {
   const [homepageVariant, setHomepageVariantState] = useState<'original' | 'new'>('new')
   const [draftPrices, setDraftPrices] = useState<Record<number, string>>({})
   const [savingPriceFor, setSavingPriceFor] = useState<number | null>(null)
+  const [newTreatment, setNewTreatment] = useState({
+    name: '',
+    category: 'facial' as 'facial' | 'brow',
+    description: '',
+    price: '',
+    duration: '',
+  })
+  const [creating, setCreating] = useState(false)
+  const [createError, setCreateError] = useState('')
 
   function refresh() {
     fetch('/api/admin/bookings').then((r) => r.json()).then(setBookings)
@@ -58,6 +67,52 @@ export default function AdminDashboard() {
       return next
     })
     setSavingPriceFor(null)
+    refresh()
+  }
+
+  async function createTreatment(e: React.FormEvent) {
+    e.preventDefault()
+    setCreateError('')
+
+    const name = newTreatment.name.trim()
+    const description = newTreatment.description.trim()
+    const price = Number(newTreatment.price)
+    const duration = Number(newTreatment.duration)
+
+    if (!name || !description) {
+      setCreateError('Name and description are required.')
+      return
+    }
+    if (Number.isNaN(price) || price < 0) {
+      setCreateError('Enter a valid price.')
+      return
+    }
+    if (!Number.isInteger(duration) || duration <= 0) {
+      setCreateError('Enter a valid duration in minutes.')
+      return
+    }
+
+    setCreating(true)
+    const res = await fetch('/api/admin/services', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name,
+        category: newTreatment.category,
+        description,
+        pricePence: Math.round(price * 100),
+        durationMinutes: duration,
+        active: true,
+      }),
+    })
+    setCreating(false)
+
+    if (!res.ok) {
+      setCreateError('Something went wrong — please try again.')
+      return
+    }
+
+    setNewTreatment({ name: '', category: 'facial', description: '', price: '', duration: '' })
     refresh()
   }
 
@@ -130,6 +185,79 @@ export default function AdminDashboard() {
 
       <section>
         <h2 className="font-serif text-2xl mb-4">Services</h2>
+
+        <form onSubmit={createTreatment} className="mb-8 p-6 border border-sage/30 rounded-xl2 bg-white/60">
+          <h3 className="font-medium mb-4">Add New Treatment</h3>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="block mb-1 text-sm font-medium">Name</label>
+              <input
+                required
+                value={newTreatment.name}
+                onChange={(e) => setNewTreatment({ ...newTreatment, name: e.target.value })}
+                className="w-full border border-sage/40 rounded px-3 py-2"
+              />
+            </div>
+            <div>
+              <label className="block mb-1 text-sm font-medium">Category</label>
+              <select
+                value={newTreatment.category}
+                onChange={(e) =>
+                  setNewTreatment({ ...newTreatment, category: e.target.value as 'facial' | 'brow' })
+                }
+                className="w-full border border-sage/40 rounded px-3 py-2 bg-white"
+              >
+                <option value="facial">Facial</option>
+                <option value="brow">Brow</option>
+              </select>
+            </div>
+            <div>
+              <label className="block mb-1 text-sm font-medium">Price (&pound;)</label>
+              <input
+                required
+                type="number"
+                min="0"
+                step="0.01"
+                value={newTreatment.price}
+                onChange={(e) => setNewTreatment({ ...newTreatment, price: e.target.value })}
+                className="w-full border border-sage/40 rounded px-3 py-2"
+              />
+            </div>
+            <div>
+              <label className="block mb-1 text-sm font-medium">Duration (minutes)</label>
+              <input
+                required
+                type="number"
+                min="1"
+                step="1"
+                value={newTreatment.duration}
+                onChange={(e) => setNewTreatment({ ...newTreatment, duration: e.target.value })}
+                className="w-full border border-sage/40 rounded px-3 py-2"
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="block mb-1 text-sm font-medium">Description</label>
+              <textarea
+                required
+                rows={3}
+                value={newTreatment.description}
+                onChange={(e) => setNewTreatment({ ...newTreatment, description: e.target.value })}
+                className="w-full border border-sage/40 rounded px-3 py-2"
+              />
+            </div>
+          </div>
+
+          {createError && <p className="text-sm text-red-600 mt-3">{createError}</p>}
+
+          <button
+            type="submit"
+            disabled={creating}
+            className="mt-4 bg-sage text-white px-6 py-2 rounded-xl2 font-medium disabled:opacity-40"
+          >
+            {creating ? 'Adding…' : 'Add Treatment'}
+          </button>
+        </form>
+
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left border-b border-sage/30">
