@@ -11,6 +11,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 # paste the output into .env.local as SESSION_SECRET=... (one-time; see note below)
 npm run seed            # seeds the 12-item treatment menu into data/sabrina.db
 npm run seed-products   # seeds 3 demo skincare products (real names/prices are placeholders)
+npm run seed-faqs       # seeds the real starting FAQ list
 npm run dev
 ```
 
@@ -32,9 +33,15 @@ get locked out entirely, reset it directly:
 npm run reset-admin-password -- "a-new-password"
 ```
 
-Admin-uploaded product images are written to `public/uploads/products/` at runtime — this requires
-a persistent filesystem (fine for local dev or a self-hosted Node server; won't work as-is on a
-stateless/serverless host without adding a blob storage service).
+Admin-uploaded product and gallery images are written to `public/uploads/` at runtime — this
+requires a persistent filesystem (fine for local dev or any self-hosted/VPS/managed Node host; won't
+work as-is on a stateless/serverless host like Vercel or Netlify without adding a blob storage
+service).
+
+The full admin dashboard (`/admin/dashboard`, once logged in) covers: treatment menu and pricing,
+products, working hours, blocked-out dates, an away/holiday announcement banner shown site-wide,
+contact details, homepage headline/tagline, About page copy, FAQs, testimonials (hidden from the
+homepage until at least one is added), and a photo gallery.
 
 ## Testing
 
@@ -42,16 +49,17 @@ stateless/serverless host without adding a blob storage service).
 npm test
 ```
 
-## Deploying later
+## Deploying
 
-This is a standard Next.js app — deployable to any Node-capable host (Vercel, Netlify, Render, etc.).
-Swap `data/sabrina.db` (SQLite) for a hosted database if the target host requires it; the data-access
-functions in `lib/services.ts` and `lib/bookings.ts` are the only places that would need updating.
+See [`DEPLOYMENT.md`](./DEPLOYMENT.md) — this is a standard Node/Next.js app deployable to any host
+that gives you a persistent filesystem (any VPS, or a managed host like Render/Railway/Fly.io). It
+is **not** deployable as-is to a purely serverless host (Vercel, Netlify) because bookings, admin
+content, and uploaded photos all need real disk storage that survives restarts.
 
 ## Known gaps (by design, deferred)
 
-- Products page is a showcase/catalog only — no online payment or checkout.
+- Products page is a showcase/catalog only — no online payment or checkout (deliberately excluded).
 - Demo product data (names, descriptions, prices, images) is placeholder — replace via the admin dashboard before launch.
 - No automated email confirmations (booking shows an on-screen confirmation only).
-- No physical address or opening hours shown — none exist yet for the business.
-- Contact email/phone are carried over from the old site (`info@s1botanicals.co.uk`) until the salon has rebranded contact details.
+- Working hours are used for the booking calendar but not shown publicly as an "opening hours" block.
+- Contact email/phone/socials are carried over from the old site (`info@s1botanicals.co.uk`) by default — editable anytime from the admin dashboard, but need updating with the salon's real details before launch.
