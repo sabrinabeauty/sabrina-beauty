@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react'
 import type { Booking } from '@/lib/bookings'
 import type { Service } from '@/lib/services'
+import AdminProductsSection from '@/components/AdminProductsSection'
 
 export default function AdminDashboard() {
   const [bookings, setBookings] = useState<Booking[]>([])
@@ -308,6 +309,10 @@ export default function AdminDashboard() {
           </tbody>
         </table>
       </section>
+
+      <hr className="my-16 border-sage/20" />
+
+      <AdminProductsSection />
     </div>
   )
 }

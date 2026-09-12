@@ -48,6 +48,15 @@ export function getDb(): Database.Database {
       key TEXT PRIMARY KEY,
       value TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS products (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      description TEXT NOT NULL,
+      price_pence INTEGER NOT NULL,
+      image_path TEXT,
+      active INTEGER NOT NULL DEFAULT 1
+    );
   `)
 
   return db

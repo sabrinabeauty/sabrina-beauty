@@ -7,6 +7,7 @@ import Logo from "./Logo";
 const NAV_LINKS = [
   { href: "/", label: "Home" },
   { href: "/services", label: "Services" },
+  { href: "/products", label: "Products" },
   { href: "/about", label: "About" },
   { href: "/faq", label: "FAQ" },
   { href: "/book", label: "Book Online" },
@@ -22,7 +23,7 @@ export default function Header() {
           <Logo />
         </Link>
 
-        <nav className="hidden md:flex gap-8 text-sm font-medium">
+        <nav className="hidden md:flex gap-6 text-sm font-medium">
           {NAV_LINKS.map((link) => (
             <Link key={link.href} href={link.href} className="hover:text-sage transition-colors">
               {link.label}

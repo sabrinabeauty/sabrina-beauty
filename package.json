@@ -9,6 +9,7 @@
     "lint": "next lint",
     "test": "vitest run",
     "seed": "tsx scripts/seed.ts",
+    "seed-products": "tsx scripts/seed-products.ts",
     "hash-password": "tsx scripts/hash-password.ts"
   },
   "dependencies": {

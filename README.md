@@ -21,11 +21,16 @@ SESSION_SECRET=some-long-random-string
 Then seed the treatment menu and start the dev server:
 
 ```bash
-npm run seed   # seeds the 12-item treatment menu into data/sabrina.db
+npm run seed            # seeds the 12-item treatment menu into data/sabrina.db
+npm run seed-products   # seeds 3 demo skincare products (real names/prices are placeholders)
 npm run dev
 ```
 
 Visit http://localhost:3000. Admin dashboard: http://localhost:3000/admin.
+
+Admin-uploaded product images are written to `public/uploads/products/` at runtime — this requires
+a persistent filesystem (fine for local dev or a self-hosted Node server; won't work as-is on a
+stateless/serverless host without adding a blob storage service).
 
 ## Testing
 
@@ -41,7 +46,8 @@ functions in `lib/services.ts` and `lib/bookings.ts` are the only places that wo
 
 ## Known gaps (by design, deferred)
 
-- No online payment / product sales.
+- Products page is a showcase/catalog only — no online payment or checkout.
+- Demo product data (names, descriptions, prices, images) is placeholder — replace via the admin dashboard before launch.
 - No automated email confirmations (booking shows an on-screen confirmation only).
 - No physical address or opening hours shown — none exist yet for the business.
 - Contact email/phone are carried over from the old site (`info@s1botanicals.co.uk`) until the salon has rebranded contact details.
