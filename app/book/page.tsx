@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import BookingForm from '@/components/BookingForm'
 
 export default function BookPage() {
@@ -7,7 +8,9 @@ export default function BookPage() {
       <p className="text-center text-charcoal/70 mb-12">
         Choose your treatment, pick a convenient date and time, and leave the rest to us.
       </p>
-      <BookingForm />
+      <Suspense>
+        <BookingForm />
+      </Suspense>
     </div>
   )
 }

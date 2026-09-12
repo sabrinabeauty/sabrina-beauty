@@ -1,6 +1,7 @@
 // app/page.tsx
 import Image from 'next/image'
 import Link from 'next/link'
+import InstagramFollow from '@/components/InstagramFollow'
 
 export default function HomePage() {
   return (
@@ -45,6 +46,8 @@ export default function HomePage() {
           Explore our full treatment menu &rarr;
         </Link>
       </section>
+
+      <InstagramFollow />
     </>
   )
 }

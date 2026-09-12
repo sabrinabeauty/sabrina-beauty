@@ -3,6 +3,7 @@ import { Cormorant_Garamond, Inter } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import StickyBookBar from "@/components/StickyBookBar";
 
 const serif = Cormorant_Garamond({
   subsets: ["latin"],
@@ -32,8 +33,9 @@ export default function RootLayout({
         className={`${serif.variable} ${sans.variable} font-sans bg-cream text-charcoal`}
       >
         <Header />
-        <main>{children}</main>
+        <main className="pb-20 md:pb-0">{children}</main>
         <Footer />
+        <StickyBookBar />
       </body>
     </html>
   );

@@ -1,11 +1,17 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import type { Service } from '@/lib/services'
 
 export default function BookingForm() {
+  const searchParams = useSearchParams()
+  const preselectedServiceId = searchParams.get('service')
+
   const [services, setServices] = useState<Service[]>([])
-  const [serviceId, setServiceId] = useState<number | ''>('')
+  const [serviceId, setServiceId] = useState<number | ''>(
+    preselectedServiceId ? Number(preselectedServiceId) : ''
+  )
   const [date, setDate] = useState('')
   const [slots, setSlots] = useState<string[]>([])
   const [time, setTime] = useState('')
