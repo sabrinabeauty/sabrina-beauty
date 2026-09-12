@@ -3,6 +3,8 @@ import Image from 'next/image'
 import { listServices } from '@/lib/services'
 import ServiceCard from '@/components/ServiceCard'
 
+export const dynamic = 'force-dynamic'
+
 export default function ServicesPage() {
   const services = listServices({ activeOnly: true })
   const facials = services.filter((s) => s.category === 'facial')

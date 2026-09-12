@@ -9,6 +9,8 @@ export default function AdminDashboard() {
   const [bookings, setBookings] = useState<Booking[]>([])
   const [services, setServices] = useState<Service[]>([])
   const [homepageVariant, setHomepageVariantState] = useState<'original' | 'new'>('new')
+  const [draftPrices, setDraftPrices] = useState<Record<number, string>>({})
+  const [savingPriceFor, setSavingPriceFor] = useState<number | null>(null)
 
   function refresh() {
     fetch('/api/admin/bookings').then((r) => r.json()).then(setBookings)
@@ -35,6 +37,27 @@ export default function AdminDashboard() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status }),
     })
+    refresh()
+  }
+
+  async function savePrice(service: Service) {
+    const draft = draftPrices[service.id]
+    if (draft === undefined) return
+    const pounds = Number(draft)
+    if (Number.isNaN(pounds) || pounds < 0) return
+
+    setSavingPriceFor(service.id)
+    await fetch(`/api/admin/services/${service.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pricePence: Math.round(pounds * 100) }),
+    })
+    setDraftPrices((prev) => {
+      const next = { ...prev }
+      delete next[service.id]
+      return next
+    })
+    setSavingPriceFor(null)
     refresh()
   }
 
@@ -114,18 +137,46 @@ export default function AdminDashboard() {
             </tr>
           </thead>
           <tbody>
-            {services.map((s) => (
-              <tr key={s.id} className="border-b border-sage/10">
-                <td className="py-2">{s.name}</td>
-                <td>&pound;{(s.pricePence / 100).toFixed(0)}</td>
-                <td>{s.active ? 'Yes' : 'No'}</td>
-                <td>
-                  <button onClick={() => toggleActive(s)} className="text-sage underline">
-                    {s.active ? 'Deactivate' : 'Activate'}
-                  </button>
-                </td>
-              </tr>
-            ))}
+            {services.map((s) => {
+              const currentPounds = (s.pricePence / 100).toFixed(2)
+              const draft = draftPrices[s.id] ?? currentPounds
+              const isDirty = draft !== currentPounds
+              return (
+                <tr key={s.id} className="border-b border-sage/10">
+                  <td className="py-2">{s.name}</td>
+                  <td className="py-2">
+                    <div className="flex items-center gap-2">
+                      <span>&pound;</span>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={draft}
+                        onChange={(e) =>
+                          setDraftPrices((prev) => ({ ...prev, [s.id]: e.target.value }))
+                        }
+                        className="w-20 border border-sage/40 rounded px-2 py-1"
+                      />
+                      {isDirty && (
+                        <button
+                          onClick={() => savePrice(s)}
+                          disabled={savingPriceFor === s.id}
+                          className="text-sage underline disabled:opacity-40"
+                        >
+                          {savingPriceFor === s.id ? 'Saving…' : 'Save'}
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                  <td>{s.active ? 'Yes' : 'No'}</td>
+                  <td>
+                    <button onClick={() => toggleActive(s)} className="text-sage underline">
+                      {s.active ? 'Deactivate' : 'Activate'}
+                    </button>
+                  </td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </section>

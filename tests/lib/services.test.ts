@@ -27,6 +27,21 @@ describe('services data layer', () => {
     expect(services[0].name).toBe('Brow Shape')
   })
 
+  it('updateService changes the price and the change is reflected in listServices', async () => {
+    const { createService, updateService, listServices } = await import('../../lib/services')
+    const s = createService({
+      name: 'Brow Shape',
+      category: 'brow',
+      description: 'Precision waxing.',
+      pricePence: 1800,
+      durationMinutes: 15,
+      active: true,
+    })
+    updateService(s.id, { pricePence: 2200 })
+    const updated = listServices().find((x) => x.id === s.id)
+    expect(updated?.pricePence).toBe(2200)
+  })
+
   it('deactivateService hides it from activeOnly listing but keeps it in full listing', async () => {
     const { createService, deactivateService, listServices } = await import('../../lib/services')
     const s = createService({

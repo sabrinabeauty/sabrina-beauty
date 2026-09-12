@@ -3,9 +3,7 @@ import { notFound } from 'next/navigation'
 import { listServices } from '@/lib/services'
 import { slugify } from '@/lib/slug'
 
-export function generateStaticParams() {
-  return listServices({ activeOnly: true }).map((s) => ({ slug: slugify(s.name) }))
-}
+export const dynamic = 'force-dynamic'
 
 export default function ServiceDetailPage({ params }: { params: { slug: string } }) {
   const service = listServices({ activeOnly: true }).find((s) => slugify(s.name) === params.slug)
