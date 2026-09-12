@@ -10,7 +10,7 @@
     "test": "vitest run",
     "seed": "tsx scripts/seed.ts",
     "seed-products": "tsx scripts/seed-products.ts",
-    "hash-password": "tsx scripts/hash-password.ts"
+    "reset-admin-password": "tsx scripts/reset-admin-password.ts"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

@@ -1,14 +1,26 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import bcrypt from 'bcryptjs'
+import path from 'node:path'
+import fs from 'node:fs'
 
-beforeEach(() => {
-  process.env.SESSION_SECRET = 'test-secret'
+const TEST_DB_PATH = path.join(process.cwd(), 'data', 'test-auth.db')
+
+beforeEach(async () => {
+  process.env.SABRINA_DB_PATH = TEST_DB_PATH
+  if (fs.existsSync(TEST_DB_PATH)) fs.unlinkSync(TEST_DB_PATH)
+  const { resetDbForTests } = await import('../../lib/db')
+  resetDbForTests()
 })
 
 describe('auth', () => {
-  it('verifyPassword returns true for the correct password', async () => {
-    process.env.ADMIN_PASSWORD_HASH = bcrypt.hashSync('correct-horse', 10)
+  it('verifyPassword returns false when no password has been set yet', async () => {
     const { verifyPassword } = await import('../../lib/auth')
+    expect(await verifyPassword('anything')).toBe(false)
+  })
+
+  it('hashPassword + setAdminPasswordHash round-trips through verifyPassword', async () => {
+    const { hashPassword, verifyPassword } = await import('../../lib/auth')
+    const { setAdminPasswordHash } = await import('../../lib/settings')
+    setAdminPasswordHash(await hashPassword('correct-horse'))
     expect(await verifyPassword('correct-horse')).toBe(true)
     expect(await verifyPassword('wrong')).toBe(false)
   })

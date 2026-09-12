@@ -24,4 +24,15 @@ describe('settings', () => {
     setHomepageVariant('new')
     expect(getHomepageVariant()).toBe('new')
   })
+
+  it('getAdminPasswordHash returns undefined when never set', async () => {
+    const { getAdminPasswordHash } = await import('../../lib/settings')
+    expect(getAdminPasswordHash()).toBeUndefined()
+  })
+
+  it('setAdminPasswordHash persists and getAdminPasswordHash reflects it', async () => {
+    const { getAdminPasswordHash, setAdminPasswordHash } = await import('../../lib/settings')
+    setAdminPasswordHash('some-bcrypt-hash')
+    expect(getAdminPasswordHash()).toBe('some-bcrypt-hash')
+  })
 })

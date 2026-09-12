@@ -28,3 +28,14 @@ export function getHomepageVariant(): HomepageVariant {
 export function setHomepageVariant(variant: HomepageVariant): void {
   setSetting(HOMEPAGE_VARIANT_KEY, variant)
 }
+
+const ADMIN_PASSWORD_HASH_KEY = 'admin_password_hash'
+
+export function getAdminPasswordHash(): string | undefined {
+  return getSetting(ADMIN_PASSWORD_HASH_KEY)
+}
+
+export function setAdminPasswordHash(hash: string): void {
+  setSetting(ADMIN_PASSWORD_HASH_KEY, hash)
+}
+

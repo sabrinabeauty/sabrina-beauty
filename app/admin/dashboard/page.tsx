@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import type { Booking } from '@/lib/bookings'
 import type { Service } from '@/lib/services'
 import AdminProductsSection from '@/components/AdminProductsSection'
+import AdminChangePassword from '@/components/AdminChangePassword'
 
 export default function AdminDashboard() {
   const [bookings, setBookings] = useState<Booking[]>([])
@@ -133,6 +134,8 @@ export default function AdminDashboard() {
   return (
     <div className="max-w-5xl mx-auto px-6 py-16">
       <h1 className="font-serif text-3xl mb-10">Admin Dashboard</h1>
+
+      <AdminChangePassword />
 
       <section className="mb-16">
         <h2 className="font-serif text-2xl mb-4">Homepage Design</h2>

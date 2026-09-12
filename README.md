@@ -6,27 +6,21 @@ Local, self-contained Next.js site for Sabrina Beauty (skincare, facials, spa tr
 
 ```bash
 npm install
-cp .env.local.example .env.local
-npm run hash-password -- "your-chosen-admin-password"
-# paste the printed hash into .env.local as ADMIN_PASSWORD_HASH
-```
-
-**Important:** the bcrypt hash contains literal `$` characters (e.g. `$2b$10$...`). Next.js expands `$VAR`-style references in `.env` files, which will silently corrupt an unescaped hash and break admin login. Escape every `$` as `\$` in `.env.local`, e.g.:
-
-```
-ADMIN_PASSWORD_HASH=\$2b\$10\$XUWTFjp.zibJJMsa/Js9R.IsNqk.VqYSxUwuvpR/snZl/NXsZRaua
-SESSION_SECRET=some-long-random-string
-```
-
-Then seed the treatment menu and start the dev server:
-
-```bash
 npm run seed            # seeds the 12-item treatment menu into data/sabrina.db
 npm run seed-products   # seeds 3 demo skincare products (real names/prices are placeholders)
 npm run dev
 ```
 
 Visit http://localhost:3000. Admin dashboard: http://localhost:3000/admin.
+
+**No password is pre-configured.** The first time anyone visits `/admin`, they're prompted to set
+one — it's stored (hashed) in `data/sabrina.db`, not in an env file, so there's nothing to
+hand-configure or accidentally corrupt. It can be changed later from the dashboard itself
+("Change Admin Password"). If you ever get locked out entirely, reset it directly:
+
+```bash
+npm run reset-admin-password -- "a-new-password"
+```
 
 Admin-uploaded product images are written to `public/uploads/products/` at runtime — this requires
 a persistent filesystem (fine for local dev or a self-hosted Node server; won't work as-is on a
