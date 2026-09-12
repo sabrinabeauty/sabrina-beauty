@@ -43,6 +43,11 @@ export function getDb(): Database.Database {
       time TEXT,
       UNIQUE(date, time)
     );
+
+    CREATE TABLE IF NOT EXISTS settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    );
   `)
 
   return db

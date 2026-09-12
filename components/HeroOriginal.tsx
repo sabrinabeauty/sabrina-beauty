@@ -1,0 +1,29 @@
+import Image from 'next/image'
+import Link from 'next/link'
+
+export default function HeroOriginal() {
+  return (
+    <section className="relative h-[80vh] min-h-[560px] flex items-center">
+      <Image
+        src="/images/hero-original.jpg"
+        alt="Client receiving a relaxing facial treatment at Sabrina Beauty"
+        fill
+        priority
+        className="object-cover"
+      />
+      <div className="absolute inset-0 bg-charcoal/30" />
+      <div className="relative max-w-3xl mx-auto text-center text-cream px-6">
+        <h1 className="font-serif text-5xl sm:text-6xl mb-6">Welcome to Sabrina Beauty</h1>
+        <p className="text-lg sm:text-xl mb-8">
+          Your sanctuary for luxurious, results-focused facial treatments designed to enhance your natural beauty.
+        </p>
+        <Link
+          href="/book"
+          className="inline-block bg-blush text-charcoal px-8 py-3 rounded-xl2 font-medium hover:bg-blush/90 transition-colors"
+        >
+          Book Your Treatment
+        </Link>
+      </div>
+    </section>
+  )
+}
