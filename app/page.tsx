@@ -12,9 +12,9 @@ export default function HomePage() {
           alt="Client receiving a relaxing facial treatment at Sabrina Beauty"
           fill
           priority
-          className="object-cover brightness-90"
+          className="object-cover"
         />
-        <div className="absolute inset-0 bg-charcoal/30" />
+        <div className="absolute inset-0 bg-charcoal/20" />
         <div className="relative max-w-3xl mx-auto text-center text-cream px-6">
           <h1 className="font-serif text-5xl sm:text-6xl mb-6">Welcome to Sabrina Beauty</h1>
           <p className="text-lg sm:text-xl mb-8">
