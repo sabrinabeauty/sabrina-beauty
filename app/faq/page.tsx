@@ -1,7 +1,7 @@
 import { listFaqs } from '@/lib/faqs'
 
-export default function FaqPage() {
-  const faqs = listFaqs()
+export default async function FaqPage() {
+  const faqs = await listFaqs()
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-16">

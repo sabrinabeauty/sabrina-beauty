@@ -1,4 +1,4 @@
-import { getDb } from './db'
+import { sql, ensureSchema } from './db'
 
 export type Testimonial = {
   id: number
@@ -11,53 +11,56 @@ type TestimonialRow = {
   id: number
   client_name: string
   quote: string
-  active: number
+  active: boolean
 }
 
 function rowToTestimonial(row: TestimonialRow): Testimonial {
-  return { id: row.id, clientName: row.client_name, quote: row.quote, active: row.active === 1 }
+  return { id: row.id, clientName: row.client_name, quote: row.quote, active: row.active }
 }
 
-export function listTestimonials(opts: { activeOnly?: boolean } = {}): Testimonial[] {
-  const db = getDb()
-  const rows = opts.activeOnly
-    ? db.prepare('SELECT * FROM testimonials WHERE active = 1 ORDER BY id DESC').all()
-    : db.prepare('SELECT * FROM testimonials ORDER BY id DESC').all()
-  return (rows as TestimonialRow[]).map(rowToTestimonial)
+export async function listTestimonials(opts: { activeOnly?: boolean } = {}): Promise<Testimonial[]> {
+  await ensureSchema()
+  const { rows } = opts.activeOnly
+    ? await sql<TestimonialRow>`SELECT * FROM testimonials WHERE active = true ORDER BY id DESC`
+    : await sql<TestimonialRow>`SELECT * FROM testimonials ORDER BY id DESC`
+  return rows.map(rowToTestimonial)
 }
 
-export function getTestimonial(id: number): Testimonial | undefined {
-  const db = getDb()
-  const row = db.prepare('SELECT * FROM testimonials WHERE id = ?').get(id) as TestimonialRow | undefined
-  return row ? rowToTestimonial(row) : undefined
+export async function getTestimonial(id: number): Promise<Testimonial | undefined> {
+  await ensureSchema()
+  const { rows } = await sql<TestimonialRow>`SELECT * FROM testimonials WHERE id = ${id}`
+  return rows[0] ? rowToTestimonial(rows[0]) : undefined
 }
 
-export function createTestimonial(input: Omit<Testimonial, 'id'>): Testimonial {
-  const db = getDb()
-  const result = db
-    .prepare(
-      'INSERT INTO testimonials (client_name, quote, active) VALUES (@clientName, @quote, @active)'
-    )
-    .run({ ...input, active: input.active ? 1 : 0 })
-  return getTestimonial(result.lastInsertRowid as number)!
+export async function createTestimonial(input: Omit<Testimonial, 'id'>): Promise<Testimonial> {
+  await ensureSchema()
+  const { rows } = await sql<TestimonialRow>`
+    INSERT INTO testimonials (client_name, quote, active) VALUES (${input.clientName}, ${input.quote}, ${input.active})
+    RETURNING *
+  `
+  return rowToTestimonial(rows[0])
 }
 
-export function updateTestimonial(id: number, input: Partial<Omit<Testimonial, 'id'>>): Testimonial {
-  const existing = getTestimonial(id)
+export async function updateTestimonial(
+  id: number,
+  input: Partial<Omit<Testimonial, 'id'>>
+): Promise<Testimonial> {
+  const existing = await getTestimonial(id)
   if (!existing) throw new Error(`Testimonial ${id} not found`)
   const merged = { ...existing, ...input }
-  const db = getDb()
-  db.prepare('UPDATE testimonials SET client_name = @clientName, quote = @quote, active = @active WHERE id = @id').run(
-    { ...merged, active: merged.active ? 1 : 0 }
-  )
-  return getTestimonial(id)!
+  const { rows } = await sql<TestimonialRow>`
+    UPDATE testimonials SET client_name = ${merged.clientName}, quote = ${merged.quote}, active = ${merged.active}
+    WHERE id = ${id}
+    RETURNING *
+  `
+  return rowToTestimonial(rows[0])
 }
 
-export function deactivateTestimonial(id: number): void {
-  updateTestimonial(id, { active: false })
+export async function deactivateTestimonial(id: number): Promise<void> {
+  await updateTestimonial(id, { active: false })
 }
 
-export function deleteTestimonial(id: number): void {
-  const db = getDb()
-  db.prepare('DELETE FROM testimonials WHERE id = ?').run(id)
+export async function deleteTestimonial(id: number): Promise<void> {
+  await ensureSchema()
+  await sql`DELETE FROM testimonials WHERE id = ${id}`
 }

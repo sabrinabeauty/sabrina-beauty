@@ -28,17 +28,10 @@ yarn-error.log*
 # local env files
 .env*.local
 
-# sqlite data
-data/*.db
-data/*.db-*
-
-# admin-uploaded runtime files (not source assets)
-public/uploads/*
-!public/uploads/.gitkeep
-
 # vercel
 .vercel
 
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+.env*

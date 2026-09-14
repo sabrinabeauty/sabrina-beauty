@@ -1,4 +1,4 @@
-import { getDb } from './db'
+import { sql, ensureSchema } from './db'
 
 export type Service = {
   id: number
@@ -17,7 +17,7 @@ type ServiceRow = {
   description: string
   price_pence: number
   duration_minutes: number
-  active: number
+  active: boolean
 }
 
 function rowToService(row: ServiceRow): Service {
@@ -28,47 +28,47 @@ function rowToService(row: ServiceRow): Service {
     description: row.description,
     pricePence: row.price_pence,
     durationMinutes: row.duration_minutes,
-    active: row.active === 1,
+    active: row.active,
   }
 }
 
-export function listServices(opts: { activeOnly?: boolean } = {}): Service[] {
-  const db = getDb()
-  const rows = opts.activeOnly
-    ? db.prepare('SELECT * FROM services WHERE active = 1 ORDER BY category, price_pence').all()
-    : db.prepare('SELECT * FROM services ORDER BY category, price_pence').all()
-  return (rows as ServiceRow[]).map(rowToService)
+export async function listServices(opts: { activeOnly?: boolean } = {}): Promise<Service[]> {
+  await ensureSchema()
+  const { rows } = opts.activeOnly
+    ? await sql<ServiceRow>`SELECT * FROM services WHERE active = true ORDER BY category, price_pence`
+    : await sql<ServiceRow>`SELECT * FROM services ORDER BY category, price_pence`
+  return rows.map(rowToService)
 }
 
-export function getService(id: number): Service | undefined {
-  const db = getDb()
-  const row = db.prepare('SELECT * FROM services WHERE id = ?').get(id) as ServiceRow | undefined
-  return row ? rowToService(row) : undefined
+export async function getService(id: number): Promise<Service | undefined> {
+  await ensureSchema()
+  const { rows } = await sql<ServiceRow>`SELECT * FROM services WHERE id = ${id}`
+  return rows[0] ? rowToService(rows[0]) : undefined
 }
 
-export function createService(input: Omit<Service, 'id'>): Service {
-  const db = getDb()
-  const result = db
-    .prepare(
-      `INSERT INTO services (name, category, description, price_pence, duration_minutes, active)
-       VALUES (@name, @category, @description, @pricePence, @durationMinutes, @active)`
-    )
-    .run({ ...input, active: input.active ? 1 : 0 })
-  return getService(result.lastInsertRowid as number)!
+export async function createService(input: Omit<Service, 'id'>): Promise<Service> {
+  await ensureSchema()
+  const { rows } = await sql<ServiceRow>`
+    INSERT INTO services (name, category, description, price_pence, duration_minutes, active)
+    VALUES (${input.name}, ${input.category}, ${input.description}, ${input.pricePence}, ${input.durationMinutes}, ${input.active})
+    RETURNING *
+  `
+  return rowToService(rows[0])
 }
 
-export function updateService(id: number, input: Partial<Omit<Service, 'id'>>): Service {
-  const existing = getService(id)
+export async function updateService(id: number, input: Partial<Omit<Service, 'id'>>): Promise<Service> {
+  const existing = await getService(id)
   if (!existing) throw new Error(`Service ${id} not found`)
   const merged = { ...existing, ...input }
-  const db = getDb()
-  db.prepare(
-    `UPDATE services SET name = @name, category = @category, description = @description,
-     price_pence = @pricePence, duration_minutes = @durationMinutes, active = @active WHERE id = @id`
-  ).run({ ...merged, active: merged.active ? 1 : 0 })
-  return getService(id)!
+  const { rows } = await sql<ServiceRow>`
+    UPDATE services SET name = ${merged.name}, category = ${merged.category}, description = ${merged.description},
+      price_pence = ${merged.pricePence}, duration_minutes = ${merged.durationMinutes}, active = ${merged.active}
+    WHERE id = ${id}
+    RETURNING *
+  `
+  return rowToService(rows[0])
 }
 
-export function deactivateService(id: number): void {
-  updateService(id, { active: false })
+export async function deactivateService(id: number): Promise<void> {
+  await updateService(id, { active: false })
 }

@@ -1,4 +1,4 @@
-import { getDb } from './db'
+import { sql, ensureSchema } from './db'
 
 export type GalleryImage = {
   id: number
@@ -11,43 +11,42 @@ type GalleryImageRow = {
   id: number
   image_path: string
   caption: string | null
-  active: number
+  active: boolean
 }
 
 function rowToGalleryImage(row: GalleryImageRow): GalleryImage {
-  return { id: row.id, imagePath: row.image_path, caption: row.caption, active: row.active === 1 }
+  return { id: row.id, imagePath: row.image_path, caption: row.caption, active: row.active }
 }
 
-export function listGalleryImages(opts: { activeOnly?: boolean } = {}): GalleryImage[] {
-  const db = getDb()
-  const rows = opts.activeOnly
-    ? db.prepare('SELECT * FROM gallery_images WHERE active = 1 ORDER BY id DESC').all()
-    : db.prepare('SELECT * FROM gallery_images ORDER BY id DESC').all()
-  return (rows as GalleryImageRow[]).map(rowToGalleryImage)
+export async function listGalleryImages(opts: { activeOnly?: boolean } = {}): Promise<GalleryImage[]> {
+  await ensureSchema()
+  const { rows } = opts.activeOnly
+    ? await sql<GalleryImageRow>`SELECT * FROM gallery_images WHERE active = true ORDER BY id DESC`
+    : await sql<GalleryImageRow>`SELECT * FROM gallery_images ORDER BY id DESC`
+  return rows.map(rowToGalleryImage)
 }
 
-export function getGalleryImage(id: number): GalleryImage | undefined {
-  const db = getDb()
-  const row = db.prepare('SELECT * FROM gallery_images WHERE id = ?').get(id) as GalleryImageRow | undefined
-  return row ? rowToGalleryImage(row) : undefined
+export async function getGalleryImage(id: number): Promise<GalleryImage | undefined> {
+  await ensureSchema()
+  const { rows } = await sql<GalleryImageRow>`SELECT * FROM gallery_images WHERE id = ${id}`
+  return rows[0] ? rowToGalleryImage(rows[0]) : undefined
 }
 
-export function createGalleryImage(input: Omit<GalleryImage, 'id'>): GalleryImage {
-  const db = getDb()
-  const result = db
-    .prepare(
-      'INSERT INTO gallery_images (image_path, caption, active) VALUES (@imagePath, @caption, @active)'
-    )
-    .run({ ...input, active: input.active ? 1 : 0 })
-  return getGalleryImage(result.lastInsertRowid as number)!
+export async function createGalleryImage(input: Omit<GalleryImage, 'id'>): Promise<GalleryImage> {
+  await ensureSchema()
+  const { rows } = await sql<GalleryImageRow>`
+    INSERT INTO gallery_images (image_path, caption, active) VALUES (${input.imagePath}, ${input.caption}, ${input.active})
+    RETURNING *
+  `
+  return rowToGalleryImage(rows[0])
 }
 
-export function deactivateGalleryImage(id: number): void {
-  const db = getDb()
-  db.prepare('UPDATE gallery_images SET active = 0 WHERE id = ?').run(id)
+export async function deactivateGalleryImage(id: number): Promise<void> {
+  await ensureSchema()
+  await sql`UPDATE gallery_images SET active = false WHERE id = ${id}`
 }
 
-export function deleteGalleryImage(id: number): void {
-  const db = getDb()
-  db.prepare('DELETE FROM gallery_images WHERE id = ?').run(id)
+export async function deleteGalleryImage(id: number): Promise<void> {
+  await ensureSchema()
+  await sql`DELETE FROM gallery_images WHERE id = ${id}`
 }

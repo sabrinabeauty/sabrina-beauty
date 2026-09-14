@@ -3,8 +3,8 @@ import ProductCard from '@/components/ProductCard'
 
 export const dynamic = 'force-dynamic'
 
-export default function ProductsPage() {
-  const products = listProducts({ activeOnly: true })
+export default async function ProductsPage() {
+  const products = await listProducts({ activeOnly: true })
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-16">

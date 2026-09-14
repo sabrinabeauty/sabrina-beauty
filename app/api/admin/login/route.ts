@@ -2,6 +2,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyPassword, createSessionToken, SESSION_COOKIE_NAME } from '@/lib/auth'
 
+export const dynamic = 'force-dynamic'
+export const fetchCache = 'force-no-store'
+
 export async function POST(request: NextRequest) {
   const { password } = await request.json()
   const valid = await verifyPassword(password ?? '')

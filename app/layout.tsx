@@ -7,12 +7,19 @@ import StickyBookBar from "@/components/StickyBookBar";
 import AnnouncementBanner from "@/components/AnnouncementBanner";
 
 // Every page in this app reads admin-editable content (contact info, announcement
-// banner, hero text, etc.) via Header/Footer/page bodies, which touch the SQLite
-// database directly. Forcing the whole app dynamic here — once, in the root layout —
-// means every route always reflects the latest admin changes, rather than each new
-// page needing its own `export const dynamic = 'force-dynamic'` remembered
-// individually (a mistake that already caused stale-content bugs earlier).
+// banner, hero text, etc.) via Header/Footer/page bodies, which touch the database
+// directly. Forcing the whole app dynamic here — once, in the root layout — means
+// every route always reflects the latest admin changes, rather than each new page
+// needing its own `export const dynamic = 'force-dynamic'` remembered individually
+// (a mistake that already caused stale-content bugs earlier).
+//
+// fetchCache is set separately because @vercel/postgres queries Neon over HTTP
+// fetch() under the hood, which Next.js's Data Cache silently persists to disk by
+// default — even on a `force-dynamic` route — since the route itself doesn't call
+// a Next "dynamic function" like cookies()/headers(). Without this, admin edits can
+// appear to "not save" because the *next* read serves a stale cached response.
 export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
 
 const serif = Cormorant_Garamond({
   subsets: ["latin"],

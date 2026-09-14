@@ -1,15 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import path from 'node:path'
-import fs from 'node:fs'
-
-const TEST_DB_PATH = path.join(process.cwd(), 'data', 'test-auth.db')
+import { resetDbForTests } from '../../lib/db'
 
 beforeEach(async () => {
   process.env.SESSION_SECRET = 'test-secret'
-  process.env.SABRINA_DB_PATH = TEST_DB_PATH
-  if (fs.existsSync(TEST_DB_PATH)) fs.unlinkSync(TEST_DB_PATH)
-  const { resetDbForTests } = await import('../../lib/db')
-  resetDbForTests()
+  await resetDbForTests()
 })
 
 describe('auth', () => {
@@ -21,7 +15,7 @@ describe('auth', () => {
   it('hashPassword + setAdminPasswordHash round-trips through verifyPassword', async () => {
     const { hashPassword, verifyPassword } = await import('../../lib/auth')
     const { setAdminPasswordHash } = await import('../../lib/settings')
-    setAdminPasswordHash(await hashPassword('correct-horse'))
+    await setAdminPasswordHash(await hashPassword('correct-horse'))
     expect(await verifyPassword('correct-horse')).toBe(true)
     expect(await verifyPassword('wrong')).toBe(false)
   })

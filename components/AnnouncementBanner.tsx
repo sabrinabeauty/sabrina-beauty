@@ -1,7 +1,7 @@
 import { getSiteContent } from '@/lib/settings'
 
-export default function AnnouncementBanner() {
-  const { announcementEnabled, announcementMessage } = getSiteContent()
+export default async function AnnouncementBanner() {
+  const { announcementEnabled, announcementMessage } = await getSiteContent()
   if (!announcementEnabled || !announcementMessage.trim()) return null
 
   return (

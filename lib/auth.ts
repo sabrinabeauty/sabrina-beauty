@@ -11,7 +11,7 @@ export async function hashPassword(plain: string): Promise<string> {
 }
 
 export async function verifyPassword(plain: string): Promise<boolean> {
-  const hash = getAdminPasswordHash()
+  const hash = await getAdminPasswordHash()
   if (!hash) return false
   return bcrypt.compare(plain, hash)
 }

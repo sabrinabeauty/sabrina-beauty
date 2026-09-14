@@ -1,44 +1,35 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import path from 'node:path'
-import fs from 'node:fs'
-
-const TEST_DB_PATH = path.join(process.cwd(), 'data', 'test-faqs.db')
+import { resetDbForTests } from '../../lib/db'
+import { createFaq, updateFaq, deleteFaq, listFaqs } from '../../lib/faqs'
 
 beforeEach(async () => {
-  process.env.SABRINA_DB_PATH = TEST_DB_PATH
-  if (fs.existsSync(TEST_DB_PATH)) fs.unlinkSync(TEST_DB_PATH)
-  const { resetDbForTests } = await import('../../lib/db')
-  resetDbForTests()
+  await resetDbForTests()
 })
 
 describe('faqs data layer', () => {
   it('creates a faq and lists it', async () => {
-    const { createFaq, listFaqs } = await import('../../lib/faqs')
-    createFaq({ question: 'Do you take walk-ins?', answer: 'Booking ahead is recommended.', sortOrder: 0 })
-    const faqs = listFaqs()
+    await createFaq({ question: 'Do you take walk-ins?', answer: 'Booking ahead is recommended.', sortOrder: 0 })
+    const faqs = await listFaqs()
     expect(faqs).toHaveLength(1)
     expect(faqs[0].question).toBe('Do you take walk-ins?')
   })
 
   it('lists faqs ordered by sortOrder', async () => {
-    const { createFaq, listFaqs } = await import('../../lib/faqs')
-    createFaq({ question: 'Second', answer: 'b', sortOrder: 2 })
-    createFaq({ question: 'First', answer: 'a', sortOrder: 1 })
-    const faqs = listFaqs()
+    await createFaq({ question: 'Second', answer: 'b', sortOrder: 2 })
+    await createFaq({ question: 'First', answer: 'a', sortOrder: 1 })
+    const faqs = await listFaqs()
     expect(faqs.map((f) => f.question)).toEqual(['First', 'Second'])
   })
 
   it('updateFaq changes the answer', async () => {
-    const { createFaq, updateFaq, listFaqs } = await import('../../lib/faqs')
-    const f = createFaq({ question: 'Q', answer: 'old', sortOrder: 0 })
-    updateFaq(f.id, { answer: 'new' })
-    expect(listFaqs()[0].answer).toBe('new')
+    const f = await createFaq({ question: 'Q', answer: 'old', sortOrder: 0 })
+    await updateFaq(f.id, { answer: 'new' })
+    expect((await listFaqs())[0].answer).toBe('new')
   })
 
   it('deleteFaq removes it', async () => {
-    const { createFaq, deleteFaq, listFaqs } = await import('../../lib/faqs')
-    const f = createFaq({ question: 'Q', answer: 'A', sortOrder: 0 })
-    deleteFaq(f.id)
-    expect(listFaqs()).toHaveLength(0)
+    const f = await createFaq({ question: 'Q', answer: 'A', sortOrder: 0 })
+    await deleteFaq(f.id)
+    expect(await listFaqs()).toHaveLength(0)
   })
 })

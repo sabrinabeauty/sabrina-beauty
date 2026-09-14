@@ -1,31 +1,22 @@
-import Database from 'better-sqlite3'
-import fs from 'node:fs'
-import path from 'node:path'
+import { sql } from '@vercel/postgres'
 
-let db: Database.Database | null = null
+let schemaReady: Promise<void> | null = null
 
-export function getDb(): Database.Database {
-  if (db) return db
-
-  const dbPath = process.env.SABRINA_DB_PATH || path.join(process.cwd(), 'data', 'sabrina.db')
-  fs.mkdirSync(path.dirname(dbPath), { recursive: true })
-
-  db = new Database(dbPath)
-  db.pragma('journal_mode = WAL')
-
-  db.exec(`
+async function createSchema(): Promise<void> {
+  await sql`
     CREATE TABLE IF NOT EXISTS services (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id SERIAL PRIMARY KEY,
       name TEXT NOT NULL,
       category TEXT NOT NULL CHECK(category IN ('facial','brow')),
       description TEXT NOT NULL,
       price_pence INTEGER NOT NULL,
       duration_minutes INTEGER NOT NULL,
-      active INTEGER NOT NULL DEFAULT 1
+      active BOOLEAN NOT NULL DEFAULT true
     );
-
+  `
+  await sql`
     CREATE TABLE IF NOT EXISTS bookings (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id SERIAL PRIMARY KEY,
       service_id INTEGER NOT NULL REFERENCES services(id),
       client_name TEXT NOT NULL,
       client_email TEXT NOT NULL,
@@ -33,56 +24,76 @@ export function getDb(): Database.Database {
       date TEXT NOT NULL,
       time TEXT NOT NULL,
       status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','confirmed','cancelled')),
-      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
       UNIQUE(date, time)
     );
-
+  `
+  await sql`
     CREATE TABLE IF NOT EXISTS blocked_slots (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id SERIAL PRIMARY KEY,
       date TEXT NOT NULL,
       time TEXT,
       UNIQUE(date, time)
     );
-
+  `
+  await sql`
     CREATE TABLE IF NOT EXISTS settings (
       key TEXT PRIMARY KEY,
       value TEXT NOT NULL
     );
-
+  `
+  await sql`
     CREATE TABLE IF NOT EXISTS products (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id SERIAL PRIMARY KEY,
       name TEXT NOT NULL,
       description TEXT NOT NULL,
       price_pence INTEGER NOT NULL,
       image_path TEXT,
-      active INTEGER NOT NULL DEFAULT 1
+      active BOOLEAN NOT NULL DEFAULT true
     );
-
+  `
+  await sql`
     CREATE TABLE IF NOT EXISTS faqs (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id SERIAL PRIMARY KEY,
       question TEXT NOT NULL,
       answer TEXT NOT NULL,
       sort_order INTEGER NOT NULL DEFAULT 0
     );
-
+  `
+  await sql`
     CREATE TABLE IF NOT EXISTS testimonials (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id SERIAL PRIMARY KEY,
       client_name TEXT NOT NULL,
       quote TEXT NOT NULL,
-      active INTEGER NOT NULL DEFAULT 1
+      active BOOLEAN NOT NULL DEFAULT true
     );
-
+  `
+  await sql`
     CREATE TABLE IF NOT EXISTS gallery_images (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id SERIAL PRIMARY KEY,
       image_path TEXT NOT NULL,
       caption TEXT,
-      active INTEGER NOT NULL DEFAULT 1
+      active BOOLEAN NOT NULL DEFAULT true
     );
-  `)
-
-  return db
+  `
 }
 
-export function resetDbForTests(): void {
-  db = null
+export function ensureSchema(): Promise<void> {
+  if (!schemaReady) {
+    schemaReady = createSchema().catch((err) => {
+      schemaReady = null
+      throw err
+    })
+  }
+  return schemaReady
 }
+
+export async function resetDbForTests(): Promise<void> {
+  await ensureSchema()
+  await sql`
+    TRUNCATE TABLE services, bookings, blocked_slots, settings, products, faqs, testimonials, gallery_images
+    RESTART IDENTITY CASCADE
+  `
+}
+
+export { sql }

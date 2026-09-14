@@ -37,13 +37,13 @@ const faqs: Array<Parameters<typeof createFaq>[0]> = [
   },
 ]
 
-function main() {
-  const existing = listFaqs()
+async function main() {
+  const existing = await listFaqs()
   if (existing.length > 0) {
     console.log(`FAQs table already has ${existing.length} rows — skipping seed.`)
     return
   }
-  for (const f of faqs) createFaq(f)
+  for (const f of faqs) await createFaq(f)
   console.log(`Seeded ${faqs.length} FAQs.`)
 }
 

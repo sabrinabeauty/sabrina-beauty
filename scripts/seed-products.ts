@@ -24,13 +24,13 @@ const demoProducts: Array<Parameters<typeof createProduct>[0]> = [
   },
 ]
 
-function main() {
-  const existing = listProducts()
+async function main() {
+  const existing = await listProducts()
   if (existing.length > 0) {
     console.log(`Products table already has ${existing.length} rows — skipping seed.`)
     return
   }
-  for (const p of demoProducts) createProduct(p)
+  for (const p of demoProducts) await createProduct(p)
   console.log(`Seeded ${demoProducts.length} demo products.`)
 }
 

@@ -1,5 +1,4 @@
-import fs from 'node:fs'
-import path from 'node:path'
+import { put } from '@vercel/blob'
 import crypto from 'node:crypto'
 
 const ALLOWED_TYPES: Record<string, string> = {
@@ -27,11 +26,10 @@ export async function saveUploadedImage(file: unknown, subdir: string): Promise<
   }
 
   const filename = `${Date.now()}-${crypto.randomBytes(6).toString('hex')}.${ext}`
-  const uploadDir = path.join(process.cwd(), 'public', 'uploads', subdir)
-  fs.mkdirSync(uploadDir, { recursive: true })
+  const blob = await put(`${subdir}/${filename}`, file, {
+    access: 'public',
+    contentType: file.type,
+  })
 
-  const bytes = Buffer.from(await file.arrayBuffer())
-  fs.writeFileSync(path.join(uploadDir, filename), bytes)
-
-  return { ok: true, imagePath: `/uploads/${subdir}/${filename}` }
+  return { ok: true, imagePath: blob.url }
 }

@@ -11,21 +11,21 @@
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
-    "seed": "tsx scripts/seed.ts",
-    "seed-products": "tsx scripts/seed-products.ts",
-    "seed-faqs": "tsx scripts/seed-faqs.ts",
-    "reset-admin-password": "tsx scripts/reset-admin-password.ts"
+    "seed": "tsx --env-file=.env.local scripts/seed.ts",
+    "seed-products": "tsx --env-file=.env.local scripts/seed-products.ts",
+    "seed-faqs": "tsx --env-file=.env.local scripts/seed-faqs.ts",
+    "reset-admin-password": "tsx --env-file=.env.local scripts/reset-admin-password.ts"
   },
   "dependencies": {
+    "@vercel/blob": "^2.8.0",
+    "@vercel/postgres": "^0.10.0",
     "bcryptjs": "^3.0.3",
-    "better-sqlite3": "^13.0.3",
     "next": "14.2.35",
     "react": "^18",
     "react-dom": "^18"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
-    "@types/better-sqlite3": "^9.6.0",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",

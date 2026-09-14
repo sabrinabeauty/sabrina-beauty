@@ -1,4 +1,4 @@
-import { getDb } from './db'
+import { sql, ensureSchema } from './db'
 
 export type Product = {
   id: number
@@ -15,7 +15,7 @@ type ProductRow = {
   description: string
   price_pence: number
   image_path: string | null
-  active: number
+  active: boolean
 }
 
 function rowToProduct(row: ProductRow): Product {
@@ -25,47 +25,47 @@ function rowToProduct(row: ProductRow): Product {
     description: row.description,
     pricePence: row.price_pence,
     imagePath: row.image_path,
-    active: row.active === 1,
+    active: row.active,
   }
 }
 
-export function listProducts(opts: { activeOnly?: boolean } = {}): Product[] {
-  const db = getDb()
-  const rows = opts.activeOnly
-    ? db.prepare('SELECT * FROM products WHERE active = 1 ORDER BY name').all()
-    : db.prepare('SELECT * FROM products ORDER BY name').all()
-  return (rows as ProductRow[]).map(rowToProduct)
+export async function listProducts(opts: { activeOnly?: boolean } = {}): Promise<Product[]> {
+  await ensureSchema()
+  const { rows } = opts.activeOnly
+    ? await sql<ProductRow>`SELECT * FROM products WHERE active = true ORDER BY name`
+    : await sql<ProductRow>`SELECT * FROM products ORDER BY name`
+  return rows.map(rowToProduct)
 }
 
-export function getProduct(id: number): Product | undefined {
-  const db = getDb()
-  const row = db.prepare('SELECT * FROM products WHERE id = ?').get(id) as ProductRow | undefined
-  return row ? rowToProduct(row) : undefined
+export async function getProduct(id: number): Promise<Product | undefined> {
+  await ensureSchema()
+  const { rows } = await sql<ProductRow>`SELECT * FROM products WHERE id = ${id}`
+  return rows[0] ? rowToProduct(rows[0]) : undefined
 }
 
-export function createProduct(input: Omit<Product, 'id'>): Product {
-  const db = getDb()
-  const result = db
-    .prepare(
-      `INSERT INTO products (name, description, price_pence, image_path, active)
-       VALUES (@name, @description, @pricePence, @imagePath, @active)`
-    )
-    .run({ ...input, active: input.active ? 1 : 0 })
-  return getProduct(result.lastInsertRowid as number)!
+export async function createProduct(input: Omit<Product, 'id'>): Promise<Product> {
+  await ensureSchema()
+  const { rows } = await sql<ProductRow>`
+    INSERT INTO products (name, description, price_pence, image_path, active)
+    VALUES (${input.name}, ${input.description}, ${input.pricePence}, ${input.imagePath}, ${input.active})
+    RETURNING *
+  `
+  return rowToProduct(rows[0])
 }
 
-export function updateProduct(id: number, input: Partial<Omit<Product, 'id'>>): Product {
-  const existing = getProduct(id)
+export async function updateProduct(id: number, input: Partial<Omit<Product, 'id'>>): Promise<Product> {
+  const existing = await getProduct(id)
   if (!existing) throw new Error(`Product ${id} not found`)
   const merged = { ...existing, ...input }
-  const db = getDb()
-  db.prepare(
-    `UPDATE products SET name = @name, description = @description,
-     price_pence = @pricePence, image_path = @imagePath, active = @active WHERE id = @id`
-  ).run({ ...merged, active: merged.active ? 1 : 0 })
-  return getProduct(id)!
+  const { rows } = await sql<ProductRow>`
+    UPDATE products SET name = ${merged.name}, description = ${merged.description},
+      price_pence = ${merged.pricePence}, image_path = ${merged.imagePath}, active = ${merged.active}
+    WHERE id = ${id}
+    RETURNING *
+  `
+  return rowToProduct(rows[0])
 }
 
-export function deactivateProduct(id: number): void {
-  updateProduct(id, { active: false })
+export async function deactivateProduct(id: number): Promise<void> {
+  await updateProduct(id, { active: false })
 }

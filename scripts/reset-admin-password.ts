@@ -7,5 +7,9 @@ if (!password || password.length < 8) {
   process.exit(1)
 }
 
-setAdminPasswordHash(bcrypt.hashSync(password, 10))
-console.log('Admin password updated directly in the database.')
+async function main() {
+  await setAdminPasswordHash(bcrypt.hashSync(password, 10))
+  console.log('Admin password updated directly in the database.')
+}
+
+main()

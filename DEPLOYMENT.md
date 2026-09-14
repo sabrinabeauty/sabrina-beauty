@@ -1,115 +1,99 @@
 # Deploying Sabrina Beauty
 
-This app is a standard Next.js (App Router) site with a local SQLite database
-and locally-stored uploaded images. It is **not** built for a serverless/stateless
-host (Vercel, Netlify, AWS Lambda, etc.) as-is — every write (bookings, admin
-content, uploaded photos) needs a real, persistent filesystem that survives
-restarts and redeploys.
+This app is a standard Next.js (App Router) site backed by **Vercel Postgres**
+(Neon) for data and **Vercel Blob** for uploaded photos — both provisioned
+directly from the Vercel dashboard on their free tiers. It's deployed via
+GitHub + Vercel: push to `main`, Vercel builds and deploys automatically.
 
-It will run on **any** host that gives you:
-- A Node.js process you control (Node **18.18 or newer**)
-- A persistent disk (not ephemeral/wiped-on-restart storage)
-- The ability to set environment variables
+There is no local database file and no local upload folder in production —
+everything lives in the two hosted services above, so the app is safe to run
+on Vercel's serverless platform (no persistent disk needed).
 
-That covers almost any VPS (DigitalOcean, Linode, Hetzner...), a managed Node
-host (Render, Railway, Fly.io...), or shared hosting that supports Node apps.
-Nothing in this project is tied to one platform.
+## Live setup (already done for this project)
 
-## 1. What to upload
+- **GitHub**: `github.com/sabrinabeauty/sabrina-beauty` (private repo)
+- **Vercel project**: `sabrina-beauty`, under the `Sabrina` team
+- **Postgres**: `sabrina-beauty-db` (Neon, free tier, London region), connected
+  to Production, Preview, and Development environments
+- **Blob store**: `sabrina-beauty-blob` (public access, since product/gallery
+  photos need to be viewable directly), connected to all three environments
+- **Env vars**: `SESSION_SECRET` (set manually, Production + Preview) plus the
+  `POSTGRES_*` / `DATABASE_URL*` and `BLOB_*` vars (added automatically when
+  the storage was connected)
 
-Copy the whole project folder to the server **except**:
-- `node_modules/` (reinstalled on the server, see below)
-- `.next/` (rebuilt on the server)
-- `data/` (this is *runtime* data — see the backup note below; don't overwrite a live site's database with your local one)
-- `public/uploads/` (same — runtime data, don't overwrite a live site's photos)
-- `.env.local` (contains secrets — set these directly on the server instead, see step 3)
+## Deploying changes
 
-If the code lives in git, the simplest approach is: push to a repo, then
-`git clone` (or `git pull`) directly on the server. Otherwise, zip the folder
-(excluding the paths above) and upload it.
-
-## 2. Install and build
-
-On the server, in the project folder:
+Once the domain is connected and this is genuinely live, shipping a change is:
 
 ```bash
-npm install
-npm run build
+git push origin main
 ```
 
-`npm install` compiles `better-sqlite3`, a native module — this needs a C/C++
-build toolchain (`build-essential` on Debian/Ubuntu, `gcc-c++`/`make` on
-RHEL-based distros). Most managed Node hosts (Render, Railway, Fly.io) already
-have this preinstalled; a bare VPS may need `apt install build-essential` first.
+Vercel picks up the push, builds, and deploys automatically — no manual
+steps, no server to SSH into. Preview deployments happen the same way for
+any other branch/PR.
 
-## 3. Set environment variables
+## First-time setup on a fresh environment
 
-One variable is required: `SESSION_SECRET` (signs admin login sessions —
-without it, admin login will not work). Generate one:
+The database schema and Blob store don't need manual setup — the app creates
+tables on first request (`ensureSchema()` in `lib/db.ts`). Once deployed:
 
-```bash
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-```
-
-Set the output as `SESSION_SECRET` in whatever your host uses for environment
-variables (a dashboard settings panel, a `.env` the process manager loads,
-etc.) — **do not** reuse your local dev value, generate a fresh one for
-production, and never commit it to git.
-
-## 4. Start the app
-
-```bash
-npm start
-```
-
-This runs `next start`, which listens on port 3000 by default, or the port in
-the `PORT` environment variable if your host sets one (most managed hosts set
-this automatically). `npm start` runs in the foreground — for a real deploy,
-run it under a process manager so it restarts on crash/reboot, e.g.:
-
-```bash
-npm install -g pm2
-pm2 start npm --name sabrina-beauty -- start
-pm2 save
-```
-
-If the host doesn't front the app with its own HTTPS/domain layer, put a
-reverse proxy (nginx, Caddy) in front for TLS and the real domain name —
-that part is platform-specific and outside this app's scope.
-
-## 5. First-time setup on the new server
-
-The database and upload folders are created automatically on first write —
-nothing to pre-create manually. Once the app is running:
-
-1. Visit `https://yourdomain.com/admin` — since this is a fresh database,
-   it will prompt to **set** an admin password (not log in). Set a real one.
-2. Optionally seed the starting treatment menu and FAQs:
+1. Visit `/admin` — on a fresh database this prompts to **set** an admin
+   password (not log in). Set a real one.
+2. Optionally seed the starting treatment menu and FAQs (run locally, pointed
+   at the target environment's Postgres via `vercel env pull`):
    ```bash
    npm run seed
    npm run seed-faqs
    ```
-   (Products, testimonials, and gallery photos are meant to be added for
-   real through the admin dashboard, not seeded with demo data.)
-3. Log in at `/admin` and fill in real contact details, working hours,
-   About copy, etc. from the dashboard.
+   (Products, testimonials, and gallery photos are meant to be added for real
+   through the admin dashboard, not seeded with demo data.)
+3. Log in at `/admin` and fill in real contact details, working hours, About
+   copy, etc.
 
-## 6. Backups
+## Local development against the real (dev) database
 
-The two things that make this a "real" deployment rather than a demo are
-**not** in git and only exist on the server:
+```bash
+vercel link          # one-time, links this folder to the Vercel project
+vercel env pull .env.local --environment=development
+npm install
+npm run dev
+```
 
-- `data/sabrina.db` — bookings, services, prices, FAQs, testimonials, all
-  admin-entered content, and the admin password.
-- `public/uploads/` — uploaded product and gallery photos.
+`.env.local` is gitignored — never commit it. The `development` environment
+in Vercel points at the same Neon database as Preview/Production but is a
+separate connection scope, so local dev writes don't collide with anything
+live.
 
-Back these up regularly (a cron job copying both to off-server storage is
-enough — there's no database server to dump, it's a single file). Losing the
-server without a backup of these two paths loses all real business data.
+## A caching gotcha worth knowing about
 
-## Moving to a different host later
+Next.js's Data Cache will silently cache the `fetch()` calls that
+`@vercel/postgres` makes under the hood to Neon's HTTP endpoint — even on a
+route with `dynamic = 'force-dynamic'` — because the route itself doesn't call
+a Next "dynamic function" like `cookies()`. Left unfixed, this makes admin
+edits look like they "didn't save": the write succeeds, but the next read
+serves a stale cached response instead of hitting Postgres again.
 
-Because everything lives in these two plain-filesystem paths, migrating to a
-different host later is: copy `data/sabrina.db` and `public/uploads/` to the
-new server, deploy the code there per steps 1–4, set a fresh `SESSION_SECRET`,
-and point DNS at the new server. No database export/import step needed.
+Every route and the root layout in this project set
+`export const fetchCache = 'force-no-store'` specifically to prevent this. If
+you add a new API route or Server Component that reads from the database,
+carry that export over — it's not optional, it's the fix for a real bug that
+was caught during this migration (bookings and other admin data appeared to
+vanish after being created, until this was added everywhere).
+
+## Backups
+
+Neon Postgres and Vercel Blob are the source of truth — there's no
+local-filesystem backup step needed the way a self-hosted SQLite setup would
+require. Neon's free tier includes point-in-time recovery within its
+retention window; check the Neon/Vercel Storage dashboard for current limits
+if this ever needs restoring.
+
+## Domain
+
+`sabrinabeauty.uk` is registered at Fasthosts. To go live, add the domain in
+the Vercel project's **Settings → Domains**, then set the DNS records Vercel
+provides at Fasthosts (typically an `A` record for the apex domain and a
+`CNAME` for `www`). The old site (`samarbeauty.co.uk`, hosted on Webador)
+is left untouched and independent — no redirect between the two unless
+explicitly decided later.

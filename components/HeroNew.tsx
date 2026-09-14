@@ -2,8 +2,8 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { getSiteContent } from '@/lib/settings'
 
-export default function HeroNew() {
-  const { heroHeadline, heroTagline } = getSiteContent()
+export default async function HeroNew() {
+  const { heroHeadline, heroTagline } = await getSiteContent()
   return (
     <section className="relative h-[80vh] min-h-[560px] flex items-center bg-cream">
       <Image

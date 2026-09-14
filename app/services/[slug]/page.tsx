@@ -5,8 +5,9 @@ import { slugify } from '@/lib/slug'
 
 export const dynamic = 'force-dynamic'
 
-export default function ServiceDetailPage({ params }: { params: { slug: string } }) {
-  const service = listServices({ activeOnly: true }).find((s) => slugify(s.name) === params.slug)
+export default async function ServiceDetailPage({ params }: { params: { slug: string } }) {
+  const services = await listServices({ activeOnly: true })
+  const service = services.find((s) => slugify(s.name) === params.slug)
   if (!service) notFound()
 
   const price = (service.pricePence / 100).toFixed(0)

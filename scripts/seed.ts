@@ -27,13 +27,13 @@ const treatments: Array<Parameters<typeof createService>[0]> = [
     description: 'Lamination, tint, shaping and waxing — the ultimate all-in-one treatment for perfectly groomed brows. A patch test is required at least 24 hours before your appointment.' },
 ]
 
-function main() {
-  const existing = listServices()
+async function main() {
+  const existing = await listServices()
   if (existing.length > 0) {
     console.log(`Services table already has ${existing.length} rows — skipping seed.`)
     return
   }
-  for (const t of treatments) createService(t)
+  for (const t of treatments) await createService(t)
   console.log(`Seeded ${treatments.length} services.`)
 }
 

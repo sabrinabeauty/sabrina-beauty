@@ -5,8 +5,8 @@ import ServiceCard from '@/components/ServiceCard'
 
 export const dynamic = 'force-dynamic'
 
-export default function ServicesPage() {
-  const services = listServices({ activeOnly: true })
+export default async function ServicesPage() {
+  const services = await listServices({ activeOnly: true })
   const facials = services.filter((s) => s.category === 'facial')
   const brows = services.filter((s) => s.category === 'brow')
 

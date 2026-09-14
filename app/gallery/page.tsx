@@ -1,8 +1,8 @@
 import Image from 'next/image'
 import { listGalleryImages } from '@/lib/gallery'
 
-export default function GalleryPage() {
-  const images = listGalleryImages({ activeOnly: true })
+export default async function GalleryPage() {
+  const images = await listGalleryImages({ activeOnly: true })
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-16">

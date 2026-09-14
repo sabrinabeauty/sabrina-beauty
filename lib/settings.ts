@@ -1,42 +1,41 @@
-import { getDb } from './db'
+import { sql, ensureSchema } from './db'
 
 export type HomepageVariant = 'original' | 'new'
 
 const HOMEPAGE_VARIANT_KEY = 'homepage_variant'
 const DEFAULT_HOMEPAGE_VARIANT: HomepageVariant = 'new'
 
-export function getSetting(key: string): string | undefined {
-  const db = getDb()
-  const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(key) as
-    | { value: string }
-    | undefined
-  return row?.value
+export async function getSetting(key: string): Promise<string | undefined> {
+  await ensureSchema()
+  const { rows } = await sql<{ value: string }>`SELECT value FROM settings WHERE key = ${key}`
+  return rows[0]?.value
 }
 
-export function setSetting(key: string, value: string): void {
-  const db = getDb()
-  db.prepare(
-    'INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value'
-  ).run(key, value)
+export async function setSetting(key: string, value: string): Promise<void> {
+  await ensureSchema()
+  await sql`
+    INSERT INTO settings (key, value) VALUES (${key}, ${value})
+    ON CONFLICT (key) DO UPDATE SET value = excluded.value
+  `
 }
 
-export function getHomepageVariant(): HomepageVariant {
-  const value = getSetting(HOMEPAGE_VARIANT_KEY)
+export async function getHomepageVariant(): Promise<HomepageVariant> {
+  const value = await getSetting(HOMEPAGE_VARIANT_KEY)
   return value === 'original' ? 'original' : DEFAULT_HOMEPAGE_VARIANT
 }
 
-export function setHomepageVariant(variant: HomepageVariant): void {
-  setSetting(HOMEPAGE_VARIANT_KEY, variant)
+export async function setHomepageVariant(variant: HomepageVariant): Promise<void> {
+  await setSetting(HOMEPAGE_VARIANT_KEY, variant)
 }
 
 const ADMIN_PASSWORD_HASH_KEY = 'admin_password_hash'
 
-export function getAdminPasswordHash(): string | undefined {
+export async function getAdminPasswordHash(): Promise<string | undefined> {
   return getSetting(ADMIN_PASSWORD_HASH_KEY)
 }
 
-export function setAdminPasswordHash(hash: string): void {
-  setSetting(ADMIN_PASSWORD_HASH_KEY, hash)
+export async function setAdminPasswordHash(hash: string): Promise<void> {
+  await setSetting(ADMIN_PASSWORD_HASH_KEY, hash)
 }
 
 export type DayHours = { start: string; end: string } | null
@@ -86,8 +85,8 @@ const SITE_CONTENT_DEFAULTS: SiteContent = {
 
 const SITE_CONTENT_KEY = 'site_content'
 
-export function getSiteContent(): SiteContent {
-  const raw = getSetting(SITE_CONTENT_KEY)
+export async function getSiteContent(): Promise<SiteContent> {
+  const raw = await getSetting(SITE_CONTENT_KEY)
   if (!raw) return SITE_CONTENT_DEFAULTS
   try {
     return { ...SITE_CONTENT_DEFAULTS, ...JSON.parse(raw) }
@@ -96,9 +95,8 @@ export function getSiteContent(): SiteContent {
   }
 }
 
-export function updateSiteContent(partial: Partial<SiteContent>): SiteContent {
-  const merged = { ...getSiteContent(), ...partial }
-  setSetting(SITE_CONTENT_KEY, JSON.stringify(merged))
+export async function updateSiteContent(partial: Partial<SiteContent>): Promise<SiteContent> {
+  const merged = { ...(await getSiteContent()), ...partial }
+  await setSetting(SITE_CONTENT_KEY, JSON.stringify(merged))
   return merged
 }
-

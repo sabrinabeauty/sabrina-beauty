@@ -1,25 +1,27 @@
 # Sabrina Beauty Website
 
-Local, self-contained Next.js site for Sabrina Beauty (skincare, facials, spa treatments, and brow treatments). Rebuilt from the previous Samar Beauty site with a new "modern luxury spa" design, a custom booking system, and an admin dashboard.
+Next.js site for Sabrina Beauty (skincare, facials, spa treatments, and brow treatments). Rebuilt from the previous Samar Beauty site with a new "modern luxury spa" design, a custom booking system, and an admin dashboard. Data lives in Vercel Postgres (Neon) and Vercel Blob — see [`DEPLOYMENT.md`](./DEPLOYMENT.md) for the full architecture and how it's hosted.
 
 ## Setup
 
 ```bash
 npm install
-cp .env.local.example .env.local
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-# paste the output into .env.local as SESSION_SECRET=... (one-time; see note below)
-npm run seed            # seeds the 12-item treatment menu into data/sabrina.db
-npm run seed-products   # seeds 3 demo skincare products (real names/prices are placeholders)
+vercel link                                          # one-time, links to the Vercel project
+vercel env pull .env.local --environment=development  # pulls SESSION_SECRET, Postgres, Blob creds
+npm run seed            # seeds the 12-item treatment menu
 npm run seed-faqs       # seeds the real starting FAQ list
 npm run dev
 ```
 
 Visit http://localhost:3000. Admin dashboard: http://localhost:3000/admin.
 
+If you don't have Vercel CLI access to this project, ask whoever set it up to share the
+`.env.local` values directly instead — you need `SESSION_SECRET`, `POSTGRES_URL`, and
+`BLOB_READ_WRITE_TOKEN` at minimum (see `.env.local.example` for the full list).
+
 **Why `SESSION_SECRET` is required but the password isn't:** the admin *password* is fully
 self-service — the first time anyone visits `/admin`, they're prompted to set one, stored (hashed)
-in `data/sabrina.db`. `SESSION_SECRET` is different: it signs login sessions, and Next.js runs
+in Postgres. `SESSION_SECRET` is different: it signs login sessions, and Next.js runs
 `middleware.ts` (which checks sessions) in a separate Edge runtime from the API routes (which issue
 them) — two isolated processes that share no memory. Without a real shared secret in the
 environment both can read, every login would silently fail verification. It's a plain random string
@@ -33,10 +35,8 @@ get locked out entirely, reset it directly:
 npm run reset-admin-password -- "a-new-password"
 ```
 
-Admin-uploaded product and gallery images are written to `public/uploads/` at runtime — this
-requires a persistent filesystem (fine for local dev or any self-hosted/VPS/managed Node host; won't
-work as-is on a stateless/serverless host like Vercel or Netlify without adding a blob storage
-service).
+Admin-uploaded product and gallery images are uploaded to Vercel Blob (public access) at runtime —
+no local filesystem involved, which is why this app runs fine on Vercel's serverless platform.
 
 The full admin dashboard (`/admin/dashboard`, once logged in) covers: treatment menu and pricing,
 products, working hours, blocked-out dates, an away/holiday announcement banner shown site-wide,
@@ -49,12 +49,15 @@ homepage until at least one is added), and a photo gallery.
 npm test
 ```
 
+Tests run against the real (development) Postgres database pulled into `.env.local` — each test
+file truncates all tables in `beforeEach`, and `vitest.config.ts` disables file-level parallelism so
+test files don't stomp on each other's data mid-run.
+
 ## Deploying
 
-See [`DEPLOYMENT.md`](./DEPLOYMENT.md) — this is a standard Node/Next.js app deployable to any host
-that gives you a persistent filesystem (any VPS, or a managed host like Render/Railway/Fly.io). It
-is **not** deployable as-is to a purely serverless host (Vercel, Netlify) because bookings, admin
-content, and uploaded photos all need real disk storage that survives restarts.
+See [`DEPLOYMENT.md`](./DEPLOYMENT.md). Pushing to `main` on GitHub auto-deploys via Vercel — there's
+no server to manage. Includes an important note on a Next.js Data Cache gotcha with `@vercel/postgres`
+that any new route/page needs to account for.
 
 ## Known gaps (by design, deferred)
 

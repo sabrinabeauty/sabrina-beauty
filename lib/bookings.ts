@@ -1,4 +1,4 @@
-import { getDb } from './db'
+import { sql, ensureSchema } from './db'
 import { getService } from './services'
 import { generateSlots, isSlotBlocked } from './availability'
 
@@ -40,54 +40,59 @@ function rowToBooking(row: BookingRow): Booking {
   }
 }
 
-export function getAvailableSlots(serviceId: number, date: string): string[] {
-  const service = getService(serviceId)
+export async function getAvailableSlots(serviceId: number, date: string): Promise<string[]> {
+  const service = await getService(serviceId)
   if (!service) return []
-  const db = getDb()
-  const taken = new Set(
-    (db
-      .prepare("SELECT time FROM bookings WHERE date = ? AND status != 'cancelled'")
-      .all(date) as { time: string }[])
-      .map((r) => r.time)
-  )
-  return generateSlots(date, service.durationMinutes).filter(
-    (slot) => !taken.has(slot) && !isSlotBlocked(date, slot)
-  )
+  await ensureSchema()
+  const { rows } = await sql<{ time: string }>`
+    SELECT time FROM bookings WHERE date = ${date} AND status != 'cancelled'
+  `
+  const taken = new Set(rows.map((r) => r.time))
+  const slots = await generateSlots(date, service.durationMinutes)
+  const result: string[] = []
+  for (const slot of slots) {
+    if (taken.has(slot)) continue
+    if (await isSlotBlocked(date, slot)) continue
+    result.push(slot)
+  }
+  return result
 }
 
-export function createBooking(
+export async function createBooking(
   input: Omit<Booking, 'id' | 'status' | 'createdAt'>
-): { ok: true; booking: Booking } | { ok: false; error: 'slot_unavailable' } {
-  const available = getAvailableSlots(input.serviceId, input.date)
+): Promise<{ ok: true; booking: Booking } | { ok: false; error: 'slot_unavailable' }> {
+  const available = await getAvailableSlots(input.serviceId, input.date)
   if (!available.includes(input.time)) {
     return { ok: false, error: 'slot_unavailable' }
   }
 
-  const db = getDb()
+  await ensureSchema()
   try {
-    const result = db
-      .prepare(
-        `INSERT INTO bookings (service_id, client_name, client_email, client_phone, date, time)
-         VALUES (@serviceId, @clientName, @clientEmail, @clientPhone, @date, @time)`
-      )
-      .run(input)
-    const row = db.prepare('SELECT * FROM bookings WHERE id = ?').get(result.lastInsertRowid) as BookingRow
-    return { ok: true, booking: rowToBooking(row) }
-  } catch {
+    const { rows } = await sql<BookingRow>`
+      INSERT INTO bookings (service_id, client_name, client_email, client_phone, date, time)
+      VALUES (${input.serviceId}, ${input.clientName}, ${input.clientEmail}, ${input.clientPhone}, ${input.date}, ${input.time})
+      RETURNING *
+    `
+    return { ok: true, booking: rowToBooking(rows[0]) }
+  } catch (err) {
     // UNIQUE(date, time) constraint caught a race between the availability check and insert
-    return { ok: false, error: 'slot_unavailable' }
+    if (err && typeof err === 'object' && 'code' in err && err.code === '23505') {
+      return { ok: false, error: 'slot_unavailable' }
+    }
+    throw err
   }
 }
 
-export function listBookings(): Booking[] {
-  const db = getDb()
-  const rows = db.prepare('SELECT * FROM bookings ORDER BY date, time').all() as BookingRow[]
+export async function listBookings(): Promise<Booking[]> {
+  await ensureSchema()
+  const { rows } = await sql<BookingRow>`SELECT * FROM bookings ORDER BY date, time`
   return rows.map(rowToBooking)
 }
 
-export function updateBookingStatus(id: number, status: Booking['status']): Booking {
-  const db = getDb()
-  db.prepare('UPDATE bookings SET status = ? WHERE id = ?').run(status, id)
-  const row = db.prepare('SELECT * FROM bookings WHERE id = ?').get(id) as BookingRow
-  return rowToBooking(row)
+export async function updateBookingStatus(id: number, status: Booking['status']): Promise<Booking> {
+  await ensureSchema()
+  const { rows } = await sql<BookingRow>`
+    UPDATE bookings SET status = ${status} WHERE id = ${id} RETURNING *
+  `
+  return rowToBooking(rows[0])
 }

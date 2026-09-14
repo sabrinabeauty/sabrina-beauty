@@ -1,4 +1,4 @@
-import { getDb } from './db'
+import { sql, ensureSchema } from './db'
 
 export type Faq = {
   id: number
@@ -18,38 +18,40 @@ function rowToFaq(row: FaqRow): Faq {
   return { id: row.id, question: row.question, answer: row.answer, sortOrder: row.sort_order }
 }
 
-export function listFaqs(): Faq[] {
-  const db = getDb()
-  const rows = db.prepare('SELECT * FROM faqs ORDER BY sort_order, id').all() as FaqRow[]
+export async function listFaqs(): Promise<Faq[]> {
+  await ensureSchema()
+  const { rows } = await sql<FaqRow>`SELECT * FROM faqs ORDER BY sort_order, id`
   return rows.map(rowToFaq)
 }
 
-export function getFaq(id: number): Faq | undefined {
-  const db = getDb()
-  const row = db.prepare('SELECT * FROM faqs WHERE id = ?').get(id) as FaqRow | undefined
-  return row ? rowToFaq(row) : undefined
+export async function getFaq(id: number): Promise<Faq | undefined> {
+  await ensureSchema()
+  const { rows } = await sql<FaqRow>`SELECT * FROM faqs WHERE id = ${id}`
+  return rows[0] ? rowToFaq(rows[0]) : undefined
 }
 
-export function createFaq(input: Omit<Faq, 'id'>): Faq {
-  const db = getDb()
-  const result = db
-    .prepare('INSERT INTO faqs (question, answer, sort_order) VALUES (@question, @answer, @sortOrder)')
-    .run(input)
-  return getFaq(result.lastInsertRowid as number)!
+export async function createFaq(input: Omit<Faq, 'id'>): Promise<Faq> {
+  await ensureSchema()
+  const { rows } = await sql<FaqRow>`
+    INSERT INTO faqs (question, answer, sort_order) VALUES (${input.question}, ${input.answer}, ${input.sortOrder})
+    RETURNING *
+  `
+  return rowToFaq(rows[0])
 }
 
-export function updateFaq(id: number, input: Partial<Omit<Faq, 'id'>>): Faq {
-  const existing = getFaq(id)
+export async function updateFaq(id: number, input: Partial<Omit<Faq, 'id'>>): Promise<Faq> {
+  const existing = await getFaq(id)
   if (!existing) throw new Error(`Faq ${id} not found`)
   const merged = { ...existing, ...input }
-  const db = getDb()
-  db.prepare('UPDATE faqs SET question = @question, answer = @answer, sort_order = @sortOrder WHERE id = @id').run(
-    merged
-  )
-  return getFaq(id)!
+  const { rows } = await sql<FaqRow>`
+    UPDATE faqs SET question = ${merged.question}, answer = ${merged.answer}, sort_order = ${merged.sortOrder}
+    WHERE id = ${id}
+    RETURNING *
+  `
+  return rowToFaq(rows[0])
 }
 
-export function deleteFaq(id: number): void {
-  const db = getDb()
-  db.prepare('DELETE FROM faqs WHERE id = ?').run(id)
+export async function deleteFaq(id: number): Promise<void> {
+  await ensureSchema()
+  await sql`DELETE FROM faqs WHERE id = ${id}`
 }

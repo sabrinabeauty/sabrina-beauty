@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { hashPassword, createSessionToken, verifySessionToken, SESSION_COOKIE_NAME } from '@/lib/auth'
 import { getAdminPasswordHash, setAdminPasswordHash } from '@/lib/settings'
 
+export const dynamic = 'force-dynamic'
+export const fetchCache = 'force-no-store'
+
 // Public route on purpose (see middleware.ts), but only actually unauthenticated
 // for the very first setup. If a password already exists, changing it requires a
 // valid session — checked here manually since this path is exempt from the
@@ -13,7 +16,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'password_too_short' }, { status: 400 })
   }
 
-  const alreadySet = Boolean(getAdminPasswordHash())
+  const alreadySet = Boolean(await getAdminPasswordHash())
   if (alreadySet) {
     const token = request.cookies.get(SESSION_COOKIE_NAME)?.value
     const authed = await verifySessionToken(token)
@@ -22,7 +25,7 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  setAdminPasswordHash(await hashPassword(password))
+  await setAdminPasswordHash(await hashPassword(password))
 
   const res = NextResponse.json({ ok: true })
   res.cookies.set(SESSION_COOKIE_NAME, await createSessionToken(), {

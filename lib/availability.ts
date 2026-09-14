@@ -1,4 +1,4 @@
-import { getDb } from './db'
+import { sql, ensureSchema } from './db'
 import { getSiteContent } from './settings'
 
 const SLOT_STEP_MINUTES = 30
@@ -14,9 +14,10 @@ function toHHMM(mins: number): string {
   return `${h}:${m}`
 }
 
-export function generateSlots(date: string, durationMinutes: number): string[] {
+export async function generateSlots(date: string, durationMinutes: number): Promise<string[]> {
   const weekday = new Date(`${date}T00:00:00`).getDay()
-  const hours = getSiteContent().workingHours[weekday]
+  const content = await getSiteContent()
+  const hours = content.workingHours[weekday]
   if (!hours) return []
 
   const start = toMinutes(hours.start)
@@ -28,10 +29,10 @@ export function generateSlots(date: string, durationMinutes: number): string[] {
   return slots
 }
 
-export function isSlotBlocked(date: string, time: string): boolean {
-  const db = getDb()
-  const wholeDay = db.prepare('SELECT 1 FROM blocked_slots WHERE date = ? AND time IS NULL').get(date)
-  if (wholeDay) return true
-  const exact = db.prepare('SELECT 1 FROM blocked_slots WHERE date = ? AND time = ?').get(date, time)
-  return Boolean(exact)
+export async function isSlotBlocked(date: string, time: string): Promise<boolean> {
+  await ensureSchema()
+  const { rows: wholeDay } = await sql`SELECT 1 FROM blocked_slots WHERE date = ${date} AND time IS NULL`
+  if (wholeDay.length > 0) return true
+  const { rows: exact } = await sql`SELECT 1 FROM blocked_slots WHERE date = ${date} AND time = ${time}`
+  return exact.length > 0
 }

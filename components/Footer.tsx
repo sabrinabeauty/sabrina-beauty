@@ -1,8 +1,8 @@
 import { getSiteContent } from '@/lib/settings'
 
-export default function Footer() {
+export default async function Footer() {
   const { contactEmail, contactWhatsapp, contactInstagram, contactTiktok, contactFacebook } =
-    getSiteContent()
+    await getSiteContent()
   const whatsappDigits = contactWhatsapp.replace(/[^\d]/g, '')
 
   return (

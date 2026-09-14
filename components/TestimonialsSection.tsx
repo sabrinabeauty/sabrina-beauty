@@ -1,7 +1,7 @@
 import { listTestimonials } from '@/lib/testimonials'
 
-export default function TestimonialsSection() {
-  const testimonials = listTestimonials({ activeOnly: true })
+export default async function TestimonialsSection() {
+  const testimonials = await listTestimonials({ activeOnly: true })
   if (testimonials.length === 0) return null
 
   return (

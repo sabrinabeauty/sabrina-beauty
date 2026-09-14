@@ -8,8 +8,8 @@ import { getHomepageVariant } from '@/lib/settings'
 
 export const dynamic = 'force-dynamic'
 
-export default function HomePage() {
-  const variant = getHomepageVariant()
+export default async function HomePage() {
+  const variant = await getHomepageVariant()
 
   return (
     <>

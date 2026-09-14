@@ -2,8 +2,8 @@
 import Image from 'next/image'
 import { getSiteContent } from '@/lib/settings'
 
-export default function AboutPage() {
-  const { aboutHeading, aboutBody } = getSiteContent()
+export default async function AboutPage() {
+  const { aboutHeading, aboutBody } = await getSiteContent()
   const paragraphs = aboutBody.split('\n\n').filter(Boolean)
 
   return (
