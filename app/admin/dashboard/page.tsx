@@ -12,12 +12,19 @@ import AdminAvailabilitySection from '@/components/AdminAvailabilitySection'
 import AdminFaqSection from '@/components/AdminFaqSection'
 import AdminTestimonialsSection from '@/components/AdminTestimonialsSection'
 import AdminGallerySection from '@/components/AdminGallerySection'
+import AdminBookingsCalendar from '@/components/AdminBookingsCalendar'
+
+function todayDateKey(): string {
+  const now = new Date()
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+}
 
 export default function AdminDashboard() {
   const [bookings, setBookings] = useState<Booking[]>([])
   const [services, setServices] = useState<Service[]>([])
   const [homepageVariant, setHomepageVariantState] = useState<'original' | 'new'>('new')
   const [draftPrices, setDraftPrices] = useState<Record<number, string>>({})
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null)
   const [savingPriceFor, setSavingPriceFor] = useState<number | null>(null)
   const [newTreatment, setNewTreatment] = useState({
     name: '',
@@ -54,6 +61,12 @@ export default function AdminDashboard() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status }),
     })
+    refresh()
+  }
+
+  async function deleteBooking(id: number) {
+    await fetch(`/api/admin/bookings/${id}`, { method: 'DELETE' })
+    setConfirmDeleteId(null)
     refresh()
   }
 
@@ -170,6 +183,9 @@ export default function AdminDashboard() {
 
       <section className="mb-16">
         <h2 className="font-serif text-2xl mb-4">Bookings</h2>
+
+        <AdminBookingsCalendar bookings={bookings} services={services} todayKey={todayDateKey()} />
+
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left border-b border-sage/30">
@@ -183,9 +199,23 @@ export default function AdminDashboard() {
                 <td>{b.time}</td>
                 <td>{b.clientName} &middot; {b.clientEmail} &middot; {b.clientPhone}</td>
                 <td>{b.status}</td>
-                <td className="space-x-2">
+                <td className="space-x-2 whitespace-nowrap">
                   <button onClick={() => setStatus(b.id, 'confirmed')} className="text-sage underline">Confirm</button>
                   <button onClick={() => setStatus(b.id, 'cancelled')} className="text-red-500 underline">Cancel</button>
+                  {confirmDeleteId === b.id ? (
+                    <>
+                      <button onClick={() => deleteBooking(b.id)} className="text-red-700 font-medium underline">
+                        Confirm delete
+                      </button>
+                      <button onClick={() => setConfirmDeleteId(null)} className="text-charcoal/50 underline">
+                        Keep
+                      </button>
+                    </>
+                  ) : (
+                    <button onClick={() => setConfirmDeleteId(b.id)} className="text-red-700 underline">
+                      Delete
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}

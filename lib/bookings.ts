@@ -96,3 +96,8 @@ export async function updateBookingStatus(id: number, status: Booking['status'])
   `
   return rowToBooking(rows[0])
 }
+
+export async function deleteBooking(id: number): Promise<void> {
+  await ensureSchema()
+  await sql`DELETE FROM bookings WHERE id = ${id}`
+}

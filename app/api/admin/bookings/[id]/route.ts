@@ -1,6 +1,6 @@
 // app/api/admin/bookings/[id]/route.ts
 import { NextRequest, NextResponse } from 'next/server'
-import { updateBookingStatus } from '@/lib/bookings'
+import { updateBookingStatus, deleteBooking } from '@/lib/bookings'
 
 export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-no-store'
@@ -12,4 +12,9 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   }
   const booking = await updateBookingStatus(Number(params.id), status)
   return NextResponse.json(booking)
+}
+
+export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
+  await deleteBooking(Number(params.id))
+  return NextResponse.json({ ok: true })
 }
