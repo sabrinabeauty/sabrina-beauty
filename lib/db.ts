@@ -76,6 +76,13 @@ async function createSchema(): Promise<void> {
       active BOOLEAN NOT NULL DEFAULT true
     );
   `
+  await sql`
+    CREATE TABLE IF NOT EXISTS hero_photos (
+      id SERIAL PRIMARY KEY,
+      image_path TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+  `
 }
 
 export function ensureSchema(): Promise<void> {
@@ -91,7 +98,7 @@ export function ensureSchema(): Promise<void> {
 export async function resetDbForTests(): Promise<void> {
   await ensureSchema()
   await sql`
-    TRUNCATE TABLE services, bookings, blocked_slots, settings, products, faqs, testimonials, gallery_images
+    TRUNCATE TABLE services, bookings, blocked_slots, settings, products, faqs, testimonials, gallery_images, hero_photos
     RESTART IDENTITY CASCADE
   `
 }

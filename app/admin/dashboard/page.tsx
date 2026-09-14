@@ -7,6 +7,7 @@ import type { Service } from '@/lib/services'
 import AdminProductsSection from '@/components/AdminProductsSection'
 import AdminChangePassword from '@/components/AdminChangePassword'
 import AdminSiteContentSection from '@/components/AdminSiteContentSection'
+import AdminHeroPhotosSection from '@/components/AdminHeroPhotosSection'
 import AdminAvailabilitySection from '@/components/AdminAvailabilitySection'
 import AdminFaqSection from '@/components/AdminFaqSection'
 import AdminTestimonialsSection from '@/components/AdminTestimonialsSection'
@@ -329,6 +330,10 @@ export default function AdminDashboard() {
       <hr className="my-16 border-sage/20" />
 
       <AdminSiteContentSection />
+
+      <hr className="my-16 border-sage/20" />
+
+      <AdminHeroPhotosSection />
 
       <hr className="my-16 border-sage/20" />
 
