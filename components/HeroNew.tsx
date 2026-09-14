@@ -20,7 +20,7 @@ export default function HeroNew() {
           <p className="text-lg sm:text-xl mb-8 text-charcoal/80">{heroTagline}</p>
           <Link
             href="/book"
-            className="inline-block bg-blush text-charcoal px-8 py-3 rounded-xl2 font-medium hover:bg-blush/90 transition-colors"
+            className="inline-block bg-sage text-white px-8 py-3 rounded-xl2 font-medium hover:bg-sage/90 transition-colors"
           >
             Book Your Treatment
           </Link>

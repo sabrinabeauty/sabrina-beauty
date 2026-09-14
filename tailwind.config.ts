@@ -11,10 +11,10 @@ const config: Config = {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
-        cream: "#F8F5F0",
-        sage: "#A9B4A0",
-        blush: "#E8CFC7",
-        charcoal: "#2B2926",
+        cream: "#F6D2D2",
+        sage: "#F65050",
+        blush: "#F7DEDE",
+        charcoal: "#4A3838",
       },
       fontFamily: {
         serif: ['"Cormorant Garamond"', "Georgia", "serif"],

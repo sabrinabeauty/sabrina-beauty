@@ -31,7 +31,7 @@ export default function ServiceDetailPage({ params }: { params: { slug: string }
 
       <Link
         href={`/book?service=${service.id}`}
-        className="inline-block bg-blush text-charcoal px-8 py-3 rounded-xl2 font-medium hover:bg-blush/90 transition-colors"
+        className="inline-block bg-sage text-white px-8 py-3 rounded-xl2 font-medium hover:bg-sage/90 transition-colors"
       >
         Book This Treatment
       </Link>

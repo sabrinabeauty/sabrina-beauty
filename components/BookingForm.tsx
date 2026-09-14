@@ -128,7 +128,7 @@ export default function BookingForm() {
       <button
         type="submit"
         disabled={!serviceId || !date || !time || status === 'submitting'}
-        className="w-full bg-blush text-charcoal py-3 rounded-xl2 font-medium disabled:opacity-40"
+        className="w-full bg-sage text-white py-3 rounded-xl2 font-medium disabled:opacity-40"
       >
         {status === 'submitting' ? 'Booking…' : 'Confirm Booking'}
       </button>
