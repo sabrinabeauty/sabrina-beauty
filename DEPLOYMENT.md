@@ -11,15 +11,26 @@ on Vercel's serverless platform (no persistent disk needed).
 
 ## Live setup (already done for this project)
 
-- **GitHub**: `github.com/sabrinabeauty/sabrina-beauty` (private repo)
+- **GitHub**: `github.com/sabrinabeauty/sabrina-beauty` (**public** repo — required
+  because Vercel's Hobby/free plan blocks deploys from commit authors who aren't a
+  recognized collaborator on a *private* repo, and adding paid team members isn't
+  supported on Hobby either. No secrets are ever committed — they all live in
+  `.env.local`, which is gitignored — so there's no security risk in the source
+  itself, only visibility of the code.)
 - **Vercel project**: `sabrina-beauty`, under the `Sabrina` team
 - **Postgres**: `sabrina-beauty-db` (Neon, free tier, London region), connected
-  to Production, Preview, and Development environments
+  to Production, Preview, and Development environments — this is the real,
+  live database
+- **Test Postgres**: `sabrina-beauty-test-db` (Neon, free tier, London region),
+  connected to the **Development environment only**, with env vars prefixed
+  `TEST_` (e.g. `TEST_POSTGRES_URL`) so they never collide with the real ones.
+  `npm test` TRUNCATEs every table in this database on every run — it must never
+  point at `sabrina-beauty-db`
 - **Blob store**: `sabrina-beauty-blob` (public access, since product/gallery
   photos need to be viewable directly), connected to all three environments
 - **Env vars**: `SESSION_SECRET` (set manually, Production + Preview) plus the
-  `POSTGRES_*` / `DATABASE_URL*` and `BLOB_*` vars (added automatically when
-  the storage was connected)
+  `POSTGRES_*` / `DATABASE_URL*`, `TEST_POSTGRES_*`, and `BLOB_*` vars (added
+  automatically when the storage was connected)
 
 ## Deploying changes
 

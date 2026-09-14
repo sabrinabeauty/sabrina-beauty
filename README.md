@@ -49,9 +49,14 @@ homepage until at least one is added), and a photo gallery.
 npm test
 ```
 
-Tests run against the real (development) Postgres database pulled into `.env.local` — each test
-file truncates all tables in `beforeEach`, and `vitest.config.ts` disables file-level parallelism so
-test files don't stomp on each other's data mid-run.
+Tests run against a **dedicated `sabrina-beauty-test-db`** — a separate Neon database, connected
+to the Vercel project's Development environment only, with a `TEST_` env var prefix. `vitest.config.ts`
+redirects `@vercel/postgres`'s connection at `TEST_POSTGRES_URL` and throws if that variable is
+missing, specifically so tests can never silently fall back to the real database. This isolation
+matters: each test file truncates all tables in `beforeEach`, and running that against the shared
+dev/preview/production database once already wiped the real seeded services, FAQs, and admin
+password during this project's setup. `vitest.config.ts` also disables file-level parallelism so
+test files don't stomp on each other's data mid-run within the test database.
 
 ## Deploying
 
