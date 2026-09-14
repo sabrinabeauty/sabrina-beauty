@@ -184,7 +184,13 @@ export default function AdminDashboard() {
       <section className="mb-16">
         <h2 className="font-serif text-2xl mb-4">Bookings</h2>
 
-        <AdminBookingsCalendar bookings={bookings} services={services} todayKey={todayDateKey()} />
+        <AdminBookingsCalendar
+          bookings={bookings}
+          services={services}
+          todayKey={todayDateKey()}
+          onSetStatus={setStatus}
+          onDelete={deleteBooking}
+        />
 
         <table className="w-full text-sm">
           <thead>
