@@ -16,7 +16,10 @@ export default async function HeroNew() {
         priority
         className={`object-cover ${heroImagePath ? 'object-center' : 'object-[25%_center]'}`}
       />
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cream/70 to-cream/95" />
+      {/* Below sm, the text column takes up most of the section width, so the left-to-right
+          gradient no longer clears to opaque before the (wrapped, right-aligned) text starts —
+          use a flat scrim instead so text stays legible over any photo. */}
+      <div className="absolute inset-0 bg-cream/80 sm:bg-gradient-to-r sm:from-transparent sm:via-cream/70 sm:to-cream/95" />
       <div className="relative w-full max-w-6xl mx-auto px-6">
         <div className="max-w-md ml-auto text-right">
           <h1 className="font-serif text-5xl sm:text-6xl mb-6 text-charcoal">{heroHeadline}</h1>

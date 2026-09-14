@@ -82,7 +82,7 @@ export default function BookingForm() {
           type="date"
           value={date}
           onChange={(e) => { setDate(e.target.value); setTime('') }}
-          className="w-full border border-sage/40 rounded-xl2 px-4 py-3 bg-white"
+          className="w-full min-w-0 max-w-full box-border border border-sage/40 rounded-xl2 px-4 py-3 bg-white"
         />
       </div>
 
