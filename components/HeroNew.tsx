@@ -3,15 +3,18 @@ import Link from 'next/link'
 import { getSiteContent } from '@/lib/settings'
 
 export default async function HeroNew() {
-  const { heroHeadline, heroTagline } = await getSiteContent()
+  const { heroHeadline, heroTagline, heroImagePath } = await getSiteContent()
+  // object-cover scales and crops any uploaded photo to fill the banner automatically,
+  // regardless of its original size or aspect ratio. The default stock photo's crop was
+  // tuned to a specific 25%-left focal point; a custom upload uses a safe centered crop.
   return (
     <section className="relative h-[80vh] min-h-[560px] flex items-center bg-cream">
       <Image
-        src="/images/hero.jpg"
+        src={heroImagePath || '/images/hero.jpg'}
         alt="Smiling client with radiant, glowing skin at Sabrina Beauty"
         fill
         priority
-        className="object-cover object-[25%_center]"
+        className={`object-cover ${heroImagePath ? 'object-center' : 'object-[25%_center]'}`}
       />
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cream/70 to-cream/95" />
       <div className="relative w-full max-w-6xl mx-auto px-6">

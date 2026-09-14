@@ -3,15 +3,15 @@ import Link from 'next/link'
 import { getSiteContent } from '@/lib/settings'
 
 export default async function HeroOriginal() {
-  const { heroHeadline, heroTagline } = await getSiteContent()
+  const { heroHeadline, heroTagline, heroImagePath } = await getSiteContent()
   return (
     <section className="relative h-[80vh] min-h-[560px] flex items-center">
       <Image
-        src="/images/hero-original.jpg"
+        src={heroImagePath || '/images/hero-original.jpg'}
         alt="Client receiving a relaxing facial treatment at Sabrina Beauty"
         fill
         priority
-        className="object-cover"
+        className="object-cover object-center"
       />
       <div className="absolute inset-0 bg-charcoal/30" />
       <div className="relative max-w-3xl mx-auto text-center text-cream px-6">

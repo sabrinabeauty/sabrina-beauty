@@ -51,6 +51,7 @@ export type SiteContent = {
   contactFacebook: string
   heroHeadline: string
   heroTagline: string
+  heroImagePath: string | null
   aboutHeading: string
   aboutBody: string
   workingHours: WorkingHours
@@ -77,6 +78,7 @@ const SITE_CONTENT_DEFAULTS: SiteContent = {
   heroHeadline: 'Welcome to Sabrina Beauty',
   heroTagline:
     'Your sanctuary for luxurious, results-focused facial treatments designed to enhance your natural beauty.',
+  heroImagePath: null,
   aboutHeading: 'Our Story, Your Glow',
   aboutBody:
     'Sabrina Beauty was born from a passion for skincare and a belief that beautiful skin begins with thoughtful, personalised care.\n\nOur approach combines carefully selected botanical ingredients with professional skincare techniques to nourish, refresh and enhance your skin’s natural radiance.\n\nEvery treatment is designed with care, creating a relaxing experience that leaves your skin feeling nourished, renewed, and glowing from within — and you feeling calm, cared for, and confident.',

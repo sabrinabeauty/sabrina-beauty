@@ -41,6 +41,15 @@ describe('settings', () => {
     expect(content.contactEmail).toBe('info@s1botanicals.co.uk')
     expect(content.workingHours[0]).toBeNull() // Sunday closed by default
     expect(content.workingHours[2]).toEqual({ start: '09:00', end: '17:30' }) // Tuesday
+    expect(content.heroImagePath).toBeNull()
+  })
+
+  it('updateSiteContent persists a custom hero image and can clear it back to null', async () => {
+    await updateSiteContent({ heroImagePath: 'https://example.com/blob/hero-photo.jpg' })
+    expect((await getSiteContent()).heroImagePath).toBe('https://example.com/blob/hero-photo.jpg')
+
+    await updateSiteContent({ heroImagePath: null })
+    expect((await getSiteContent()).heroImagePath).toBeNull()
   })
 
   it('updateSiteContent persists a partial update and leaves other fields untouched', async () => {

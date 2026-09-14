@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { SiteContent } from '@/lib/settings'
 
 type SavableKey = keyof SiteContent
@@ -9,6 +9,9 @@ export default function AdminSiteContentSection() {
   const [content, setContent] = useState<SiteContent | null>(null)
   const [savingGroup, setSavingGroup] = useState<string | null>(null)
   const [savedGroup, setSavedGroup] = useState<string | null>(null)
+  const [uploadingHeroImage, setUploadingHeroImage] = useState(false)
+  const [heroImageError, setHeroImageError] = useState('')
+  const heroFileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     fetch('/api/admin/site-content')
@@ -32,6 +35,28 @@ export default function AdminSiteContentSection() {
 
   function field(key: SavableKey, value: string) {
     setContent((prev) => (prev ? { ...prev, [key]: value } : prev))
+  }
+
+  async function uploadHeroImage(file: File) {
+    setHeroImageError('')
+    setUploadingHeroImage(true)
+    const formData = new FormData()
+    formData.append('file', file)
+    const res = await fetch('/api/admin/hero-image/upload', { method: 'POST', body: formData })
+    if (!res.ok) {
+      setUploadingHeroImage(false)
+      setHeroImageError('Upload failed — please try a different file (JPEG, PNG, or WebP, under 5MB).')
+      if (heroFileInputRef.current) heroFileInputRef.current.value = ''
+      return
+    }
+    const { imagePath } = await res.json()
+    await save('hero', { heroImagePath: imagePath })
+    setUploadingHeroImage(false)
+    if (heroFileInputRef.current) heroFileInputRef.current.value = ''
+  }
+
+  async function removeHeroImage() {
+    await save('hero', { heroImagePath: null })
   }
 
   if (!content) return null
@@ -138,7 +163,7 @@ export default function AdminSiteContentSection() {
       </section>
 
       <section className="mb-16">
-        <h2 className="font-serif text-2xl mb-4">Homepage Headline</h2>
+        <h2 className="font-serif text-2xl mb-4">Homepage Headline &amp; Photo</h2>
         <div className="max-w-2xl space-y-4">
           <div>
             <label className="block mb-1 text-sm font-medium">Headline</label>
@@ -166,6 +191,45 @@ export default function AdminSiteContentSection() {
           {savingGroup === 'hero' ? 'Saving…' : 'Save'}
         </button>
         {savedGroup === 'hero' && <p className="text-sm text-sage mt-2">Saved.</p>}
+
+        <div className="max-w-2xl mt-8 pt-6 border-t border-sage/20">
+          <label className="block mb-1 text-sm font-medium">Homepage banner photo</label>
+          <p className="text-sm text-charcoal/60 mb-3">
+            Any photo works — it&rsquo;s automatically scaled and cropped to fill the banner, no
+            resizing needed beforehand. Wide, landscape-oriented photos crop best; very tall or
+            square photos may lose detail off the sides. Preview below shows roughly how it will
+            be cropped.
+          </p>
+
+          <div className="w-full aspect-[21/9] rounded-xl2 overflow-hidden border border-sage/30 bg-cream mb-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={content.heroImagePath || '/images/hero.jpg'}
+              alt="Homepage banner preview"
+              className="w-full h-full object-cover object-center"
+            />
+          </div>
+
+          <div className="flex items-center gap-4 flex-wrap">
+            <input
+              ref={heroFileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file) uploadHeroImage(file)
+              }}
+              className="text-sm"
+            />
+            {uploadingHeroImage && <span className="text-sm text-charcoal/60">Uploading…</span>}
+            {content.heroImagePath && (
+              <button onClick={removeHeroImage} className="text-sm text-red-500 underline">
+                Remove photo (use default)
+              </button>
+            )}
+          </div>
+          {heroImageError && <p className="text-sm text-red-600 mt-2">{heroImageError}</p>}
+        </div>
       </section>
 
       <section className="mb-16">
