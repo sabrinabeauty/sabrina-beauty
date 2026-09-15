@@ -124,7 +124,7 @@ export default function AdminAvailabilitySection() {
               required
               value={newBlockDate}
               onChange={(e) => setNewBlockDate(e.target.value)}
-              className="min-w-0 max-w-full box-border border border-sage/40 rounded px-3 py-2"
+              className="min-w-0 max-w-full box-border appearance-none border border-sage/40 rounded px-3 py-2"
             />
           </div>
           <button type="submit" className="bg-sage text-white px-6 py-2 rounded-xl2 font-medium">
