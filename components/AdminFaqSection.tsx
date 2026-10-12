@@ -7,35 +7,63 @@ export default function AdminFaqSection() {
   const [faqs, setFaqs] = useState<Faq[]>([])
   const [newFaq, setNewFaq] = useState({ question: '', answer: '' })
   const [creating, setCreating] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  function refresh() {
-    fetch('/api/admin/faqs').then((r) => r.json()).then(setFaqs)
+  // Guards against the same failure mode fixed in AdminSiteContentSection:
+  // an expired admin session makes this 401 with `{error:'unauthorized'}`
+  // instead of an array, which previously crashed faqs.map() at render
+  // time with no explanation. Now shown as a real message instead.
+  async function refresh() {
+    const res = await fetch('/api/admin/faqs')
+    if (!res.ok) {
+      setError('Could not load FAQs — your admin session may have expired. Try refreshing the page.')
+      return
+    }
+    setError(null)
+    setFaqs(await res.json())
   }
 
-  useEffect(refresh, [])
+  useEffect(() => {
+    refresh()
+  }, [])
 
   async function createFaq(e: React.FormEvent) {
     e.preventDefault()
     if (!newFaq.question.trim() || !newFaq.answer.trim()) return
     setCreating(true)
-    await fetch('/api/admin/faqs', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...newFaq, sortOrder: faqs.length }),
-    })
-    setCreating(false)
-    setNewFaq({ question: '', answer: '' })
-    refresh()
+    setError(null)
+    try {
+      const res = await fetch('/api/admin/faqs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...newFaq, sortOrder: faqs.length }),
+      })
+      if (!res.ok) {
+        setError('Could not save — your admin session may have expired. Try refreshing the page and logging in again.')
+        return
+      }
+      setNewFaq({ question: '', answer: '' })
+      await refresh()
+    } finally {
+      setCreating(false)
+    }
   }
 
   async function removeFaq(id: number) {
-    await fetch(`/api/admin/faqs/${id}`, { method: 'DELETE' })
-    refresh()
+    setError(null)
+    const res = await fetch(`/api/admin/faqs/${id}`, { method: 'DELETE' })
+    if (!res.ok) {
+      setError('Could not remove — your admin session may have expired. Try refreshing the page and logging in again.')
+      return
+    }
+    await refresh()
   }
 
   return (
     <section className="mb-16">
       <h2 className="font-serif text-2xl mb-4">FAQ</h2>
+
+      {error && <p className="text-sm text-red-600 mb-4">{error}</p>}
 
       <form onSubmit={createFaq} className="mb-8 p-6 border border-sage/30 rounded-xl2 bg-white/60 space-y-4">
         <h3 className="font-medium">Add New Question</h3>

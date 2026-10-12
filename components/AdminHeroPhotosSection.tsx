@@ -16,26 +16,41 @@ export default function AdminHeroPhotosSection() {
   const [selecting, setSelecting] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  function refresh() {
-    fetch('/api/admin/hero-photos')
-      .then((r) => r.json())
-      .then(setPhotos)
-    fetch('/api/admin/site-content')
-      .then((r) => r.json())
-      .then((data) => setActiveImagePath(data.heroImagePath))
+  async function refresh() {
+    const [photosRes, contentRes] = await Promise.all([
+      fetch('/api/admin/hero-photos'),
+      fetch('/api/admin/site-content'),
+    ])
+    if (!photosRes.ok || !contentRes.ok) {
+      setError('Could not load — your admin session may have expired. Try refreshing the page.')
+      return
+    }
+    setError('')
+    setPhotos(await photosRes.json())
+    setActiveImagePath((await contentRes.json()).heroImagePath)
   }
 
-  useEffect(refresh, [])
+  useEffect(() => {
+    refresh()
+  }, [])
 
   async function selectPhoto(imagePath: string) {
     setSelecting(imagePath)
-    await fetch('/api/admin/site-content', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ heroImagePath: imagePath }),
-    })
-    setActiveImagePath(imagePath)
-    setSelecting(null)
+    setError('')
+    try {
+      const res = await fetch('/api/admin/site-content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ heroImagePath: imagePath }),
+      })
+      if (!res.ok) {
+        setError('Could not switch the banner photo — your admin session may have expired. Try refreshing the page and logging in again.')
+        return
+      }
+      setActiveImagePath(imagePath)
+    } finally {
+      setSelecting(null)
+    }
   }
 
   async function uploadPhoto(file: File) {
@@ -51,23 +66,32 @@ export default function AdminHeroPhotosSection() {
       return
     }
     const { imagePath } = await uploadRes.json()
-    await fetch('/api/admin/hero-photos', {
+    const saveRes = await fetch('/api/admin/hero-photos', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ imagePath }),
     })
     setUploading(false)
     if (fileInputRef.current) fileInputRef.current.value = ''
-    refresh()
+    if (!saveRes.ok) {
+      setError('Photo uploaded but could not be saved — your admin session may have expired. Try refreshing the page and logging in again.')
+      return
+    }
+    await refresh()
   }
 
   async function removePhoto(id: number, imagePath: string) {
-    await fetch(`/api/admin/hero-photos/${id}`, { method: 'DELETE' })
+    setError('')
+    const res = await fetch(`/api/admin/hero-photos/${id}`, { method: 'DELETE' })
+    if (!res.ok) {
+      setError('Could not remove that photo — your admin session may have expired. Try refreshing the page and logging in again.')
+      return
+    }
     // A deleted photo can't stay selected — fall back to the site's built-in default.
     if (activeImagePath === imagePath) {
       await selectPhoto(BUILT_IN_PHOTOS[0].imagePath)
     }
-    refresh()
+    await refresh()
   }
 
   const allPhotos: Array<{ key: string; imagePath: string; label?: string; removable: false } | { key: string; imagePath: string; removable: true; id: number }> = [

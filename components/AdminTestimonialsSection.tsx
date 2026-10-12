@@ -7,39 +7,66 @@ export default function AdminTestimonialsSection() {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([])
   const [newTestimonial, setNewTestimonial] = useState({ clientName: '', quote: '' })
   const [creating, setCreating] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  function refresh() {
-    fetch('/api/admin/testimonials').then((r) => r.json()).then(setTestimonials)
+  async function refresh() {
+    const res = await fetch('/api/admin/testimonials')
+    if (!res.ok) {
+      setError('Could not load testimonials — your admin session may have expired. Try refreshing the page.')
+      return
+    }
+    setError(null)
+    setTestimonials(await res.json())
   }
 
-  useEffect(refresh, [])
+  useEffect(() => {
+    refresh()
+  }, [])
 
   async function createTestimonial(e: React.FormEvent) {
     e.preventDefault()
     if (!newTestimonial.clientName.trim() || !newTestimonial.quote.trim()) return
     setCreating(true)
-    await fetch('/api/admin/testimonials', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...newTestimonial, active: true }),
-    })
-    setCreating(false)
-    setNewTestimonial({ clientName: '', quote: '' })
-    refresh()
+    setError(null)
+    try {
+      const res = await fetch('/api/admin/testimonials', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...newTestimonial, active: true }),
+      })
+      if (!res.ok) {
+        setError('Could not save — your admin session may have expired. Try refreshing the page and logging in again.')
+        return
+      }
+      setNewTestimonial({ clientName: '', quote: '' })
+      await refresh()
+    } finally {
+      setCreating(false)
+    }
   }
 
   async function toggleActive(t: Testimonial) {
-    await fetch(`/api/admin/testimonials/${t.id}`, {
+    setError(null)
+    const res = await fetch(`/api/admin/testimonials/${t.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ active: !t.active }),
     })
-    refresh()
+    if (!res.ok) {
+      setError('Could not update — your admin session may have expired. Try refreshing the page and logging in again.')
+      return
+    }
+    await refresh()
   }
 
   async function removeTestimonial(id: number) {
-    await fetch(`/api/admin/testimonials/${id}`, { method: 'DELETE' })
-    refresh()
+    setError(null)
+    const res = await fetch(`/api/admin/testimonials/${id}`, { method: 'DELETE' })
+    if (!res.ok) {
+      setError('Could not remove — your admin session may have expired. Try refreshing the page and logging in again.')
+      return
+    }
+    await refresh()
   }
 
   return (
@@ -48,6 +75,8 @@ export default function AdminTestimonialsSection() {
       <p className="text-sm text-charcoal/60 mb-4">
         Only real client reviews — these appear on the homepage under &ldquo;What Clients Say&rdquo; once added.
       </p>
+
+      {error && <p className="text-sm text-red-600 mb-4">{error}</p>}
 
       <form
         onSubmit={createTestimonial}

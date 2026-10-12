@@ -11,58 +11,90 @@ export default function AdminAvailabilitySection() {
   const [workingHours, setWorkingHours] = useState<WorkingHours | null>(null)
   const [savingHours, setSavingHours] = useState(false)
   const [hoursSaved, setHoursSaved] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const [blockedSlots, setBlockedSlots] = useState<BlockedSlot[]>([])
   const [newBlockDate, setNewBlockDate] = useState('')
 
-  function refresh() {
-    fetch('/api/admin/site-content')
-      .then((r) => r.json())
-      .then((data) => setWorkingHours(data.workingHours))
-    fetch('/api/admin/blocked-slots')
-      .then((r) => r.json())
-      .then(setBlockedSlots)
+  async function refresh() {
+    const [contentRes, blockedRes] = await Promise.all([
+      fetch('/api/admin/site-content'),
+      fetch('/api/admin/blocked-slots'),
+    ])
+    if (!contentRes.ok || !blockedRes.ok) {
+      setError('Could not load — your admin session may have expired. Try refreshing the page.')
+      return
+    }
+    setError(null)
+    setWorkingHours((await contentRes.json()).workingHours)
+    setBlockedSlots(await blockedRes.json())
   }
 
-  useEffect(refresh, [])
+  useEffect(() => {
+    refresh()
+  }, [])
 
   function setDay(day: number, hours: DayHours) {
     setWorkingHours((prev) => (prev ? { ...prev, [day]: hours } : prev))
   }
 
+  // Previously this always showed "Saved." regardless of whether the
+  // request actually succeeded — a failed save (e.g. expired session)
+  // looked identical to a real one, so a working-hours change could
+  // silently not take effect with no indication anything was wrong.
   async function saveWorkingHours() {
     setSavingHours(true)
     setHoursSaved(false)
-    await fetch('/api/admin/site-content', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ workingHours }),
-    })
-    setSavingHours(false)
-    setHoursSaved(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/admin/site-content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workingHours }),
+      })
+      if (!res.ok) {
+        setError('Could not save — your admin session may have expired. Try refreshing the page and logging in again.')
+        return
+      }
+      setHoursSaved(true)
+    } finally {
+      setSavingHours(false)
+    }
   }
 
   async function addBlockedDate(e: React.FormEvent) {
     e.preventDefault()
     if (!newBlockDate) return
-    await fetch('/api/admin/blocked-slots', {
+    setError(null)
+    const res = await fetch('/api/admin/blocked-slots', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ date: newBlockDate, time: null }),
     })
+    if (!res.ok) {
+      setError('Could not block that date — your admin session may have expired. Try refreshing the page and logging in again.')
+      return
+    }
     setNewBlockDate('')
-    refresh()
+    await refresh()
   }
 
   async function removeBlockedDate(id: number) {
-    await fetch(`/api/admin/blocked-slots?id=${id}`, { method: 'DELETE' })
-    refresh()
+    setError(null)
+    const res = await fetch(`/api/admin/blocked-slots?id=${id}`, { method: 'DELETE' })
+    if (!res.ok) {
+      setError('Could not remove — your admin session may have expired. Try refreshing the page and logging in again.')
+      return
+    }
+    await refresh()
   }
 
-  if (!workingHours) return null
+  if (!workingHours) return error ? <p className="text-sm text-red-600">{error}</p> : null
 
   return (
     <>
+      {error && <p className="text-sm text-red-600 mb-4">{error}</p>}
+
       <section className="mb-16">
         <h2 className="font-serif text-2xl mb-4">Working Hours</h2>
         <p className="text-sm text-charcoal/60 mb-4">Controls which time slots are offered for booking.</p>

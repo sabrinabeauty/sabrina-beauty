@@ -13,12 +13,21 @@ export default function AdminProductsSection() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [creating, setCreating] = useState(false)
   const [createError, setCreateError] = useState('')
+  const [listError, setListError] = useState('')
 
-  function refresh() {
-    fetch('/api/admin/products').then((r) => r.json()).then(setProducts)
+  async function refresh() {
+    const res = await fetch('/api/admin/products')
+    if (!res.ok) {
+      setListError('Could not load products — your admin session may have expired. Try refreshing the page.')
+      return
+    }
+    setListError('')
+    setProducts(await res.json())
   }
 
-  useEffect(refresh, [])
+  useEffect(() => {
+    refresh()
+  }, [])
 
   async function createProduct(e: React.FormEvent) {
     e.preventDefault()
@@ -83,31 +92,42 @@ export default function AdminProductsSection() {
     if (Number.isNaN(pounds) || pounds < 0) return
 
     setSavingPriceFor(product.id)
-    await fetch(`/api/admin/products/${product.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pricePence: Math.round(pounds * 100) }),
-    })
-    setDraftPrices((prev) => {
-      const next = { ...prev }
-      delete next[product.id]
-      return next
-    })
-    setSavingPriceFor(null)
-    refresh()
+    setListError('')
+    try {
+      const res = await fetch(`/api/admin/products/${product.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pricePence: Math.round(pounds * 100) }),
+      })
+      if (!res.ok) {
+        setListError('Could not save that price — your admin session may have expired. Try refreshing the page and logging in again.')
+        return
+      }
+      setDraftPrices((prev) => {
+        const next = { ...prev }
+        delete next[product.id]
+        return next
+      })
+      await refresh()
+    } finally {
+      setSavingPriceFor(null)
+    }
   }
 
   async function toggleActive(product: Product) {
-    if (product.active) {
-      await fetch(`/api/admin/products/${product.id}`, { method: 'DELETE' })
-    } else {
-      await fetch(`/api/admin/products/${product.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ active: true }),
-      })
+    setListError('')
+    const res = product.active
+      ? await fetch(`/api/admin/products/${product.id}`, { method: 'DELETE' })
+      : await fetch(`/api/admin/products/${product.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ active: true }),
+        })
+    if (!res.ok) {
+      setListError('Could not update — your admin session may have expired. Try refreshing the page and logging in again.')
+      return
     }
-    refresh()
+    await refresh()
   }
 
   return (
@@ -170,6 +190,8 @@ export default function AdminProductsSection() {
           {creating ? 'Adding…' : 'Add Product'}
         </button>
       </form>
+
+      {listError && <p className="text-sm text-red-600 mb-4">{listError}</p>}
 
       <table className="w-full text-sm">
         <thead>

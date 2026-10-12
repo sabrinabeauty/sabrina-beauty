@@ -11,11 +11,19 @@ export default function AdminGallerySection() {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
 
-  function refresh() {
-    fetch('/api/admin/gallery').then((r) => r.json()).then(setImages)
+  async function refresh() {
+    const res = await fetch('/api/admin/gallery')
+    if (!res.ok) {
+      setError('Could not load the gallery — your admin session may have expired. Try refreshing the page.')
+      return
+    }
+    setError('')
+    setImages(await res.json())
   }
 
-  useEffect(refresh, [])
+  useEffect(() => {
+    refresh()
+  }, [])
 
   async function handleUpload(e: React.FormEvent) {
     e.preventDefault()
@@ -36,21 +44,30 @@ export default function AdminGallerySection() {
     }
     const { imagePath } = await uploadRes.json()
 
-    await fetch('/api/admin/gallery', {
+    const saveRes = await fetch('/api/admin/gallery', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ imagePath, caption: caption.trim() || null, active: true }),
     })
     setUploading(false)
+    if (!saveRes.ok) {
+      setError('Photo uploaded but could not be saved — your admin session may have expired. Try refreshing the page and logging in again.')
+      return
+    }
     setCaption('')
     setFile(null)
     if (fileInputRef.current) fileInputRef.current.value = ''
-    refresh()
+    await refresh()
   }
 
   async function removeImage(id: number) {
-    await fetch(`/api/admin/gallery/${id}?hard=true`, { method: 'DELETE' })
-    refresh()
+    setError('')
+    const res = await fetch(`/api/admin/gallery/${id}?hard=true`, { method: 'DELETE' })
+    if (!res.ok) {
+      setError('Could not remove that photo — your admin session may have expired. Try refreshing the page and logging in again.')
+      return
+    }
+    await refresh()
   }
 
   return (
