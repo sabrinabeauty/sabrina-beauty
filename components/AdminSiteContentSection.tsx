@@ -9,6 +9,7 @@ export default function AdminSiteContentSection() {
   const [content, setContent] = useState<SiteContent | null>(null)
   const [savingGroup, setSavingGroup] = useState<string | null>(null)
   const [savedGroup, setSavedGroup] = useState<string | null>(null)
+  const [errorGroup, setErrorGroup] = useState<string | null>(null)
 
   useEffect(() => {
     fetch('/api/admin/site-content')
@@ -16,18 +17,35 @@ export default function AdminSiteContentSection() {
       .then(setContent)
   }, [])
 
+  // Previously this assumed every response was `SiteContent` JSON and blindly
+  // overwrote `content` with whatever came back — including a 401
+  // `{error:'unauthorized'}` body on an expired admin session, which silently
+  // wiped every field in the form (not just the one being edited) with no
+  // error shown. That's the exact failure a real "the site wouldn't let me
+  // save my email" report looks like from the outside: nothing visibly
+  // rejected, the change just didn't take and the form went blank/stale.
   async function save(group: string, patch: Partial<SiteContent>) {
     setSavingGroup(group)
     setSavedGroup(null)
-    const res = await fetch('/api/admin/site-content', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(patch),
-    })
-    const updated = await res.json()
-    setContent(updated)
-    setSavingGroup(null)
-    setSavedGroup(group)
+    setErrorGroup(null)
+    try {
+      const res = await fetch('/api/admin/site-content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(patch),
+      })
+      if (!res.ok) {
+        setErrorGroup(group)
+        return
+      }
+      const updated = await res.json()
+      setContent(updated)
+      setSavedGroup(group)
+    } catch {
+      setErrorGroup(group)
+    } finally {
+      setSavingGroup(null)
+    }
   }
 
   function field(key: SavableKey, value: string) {
@@ -73,6 +91,11 @@ export default function AdminSiteContentSection() {
           </button>
         </div>
         {savedGroup === 'announcement' && <p className="text-sm text-sage mt-2">Saved.</p>}
+        {errorGroup === 'announcement' && (
+          <p className="text-sm text-red-600 mt-2">
+            Could not save — your admin session may have expired. Try refreshing the page and logging in again.
+          </p>
+        )}
       </section>
 
       <section className="mb-16">
@@ -135,6 +158,11 @@ export default function AdminSiteContentSection() {
           {savingGroup === 'contact' ? 'Saving…' : 'Save'}
         </button>
         {savedGroup === 'contact' && <p className="text-sm text-sage mt-2">Saved.</p>}
+        {errorGroup === 'contact' && (
+          <p className="text-sm text-red-600 mt-2">
+            Could not save — your admin session may have expired. Try refreshing the page and logging in again.
+          </p>
+        )}
       </section>
 
       <section className="mb-16">
@@ -166,6 +194,11 @@ export default function AdminSiteContentSection() {
           {savingGroup === 'hero' ? 'Saving…' : 'Save'}
         </button>
         {savedGroup === 'hero' && <p className="text-sm text-sage mt-2">Saved.</p>}
+        {errorGroup === 'hero' && (
+          <p className="text-sm text-red-600 mt-2">
+            Could not save — your admin session may have expired. Try refreshing the page and logging in again.
+          </p>
+        )}
       </section>
 
       <section className="mb-16">
@@ -199,6 +232,11 @@ export default function AdminSiteContentSection() {
           {savingGroup === 'about' ? 'Saving…' : 'Save'}
         </button>
         {savedGroup === 'about' && <p className="text-sm text-sage mt-2">Saved.</p>}
+        {errorGroup === 'about' && (
+          <p className="text-sm text-red-600 mt-2">
+            Could not save — your admin session may have expired. Try refreshing the page and logging in again.
+          </p>
+        )}
       </section>
     </>
   )
