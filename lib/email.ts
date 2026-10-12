@@ -20,12 +20,12 @@ function getResendClient(): Resend {
   return resendClient
 }
 
-// The site's own "From" domain isn't verified in Resend yet (that needs DNS
-// records added at Fasthosts) — resend.dev's shared sandbox domain works
-// immediately on the free tier without any domain verification, so booking
-// alerts work today. Swap to a sabrinabeauty.uk address once the domain is
-// verified in Resend (see README/DEPLOYMENT notes).
-const FROM_ADDRESS = 'Sabrina Beauty Bookings <onboarding@resend.dev>'
+// mail.sabrinabeauty.uk is verified in Resend (DKIM/SPF records added at
+// Fasthosts, docs/resend-dns-records.md) — sending from this domain, not
+// the resend.dev sandbox, is what lets alerts actually reach
+// hello@sabrinabeauty.uk rather than only the Resend account owner's own
+// inbox.
+const FROM_ADDRESS = 'Sabrina Beauty Bookings <bookings@mail.sabrinabeauty.uk>'
 
 const defaultClient: EmailClient = {
   async send({ to, subject, html, text }) {
