@@ -89,6 +89,18 @@ export async function listBookings(): Promise<Booking[]> {
   return rows.map(rowToBooking)
 }
 
+// Used by the daily reminder cron (app/api/cron/daily-reminder/route.ts) —
+// excludes cancelled bookings the same way getAvailableSlots already does,
+// so a cancelled slot doesn't show up in Sabrina's morning reminder as if
+// it were still happening.
+export async function listBookingsForDate(date: string): Promise<Booking[]> {
+  await ensureSchema()
+  const { rows } = await sql<BookingRow>`
+    SELECT * FROM bookings WHERE date = ${date} AND status != 'cancelled' ORDER BY time
+  `
+  return rows.map(rowToBooking)
+}
+
 export async function updateBookingStatus(id: number, status: Booking['status']): Promise<Booking> {
   await ensureSchema()
   const { rows } = await sql<BookingRow>`

@@ -80,3 +80,48 @@ export async function sendBookingNotification(
 
   await client.send({ to, subject, html, text })
 }
+
+export interface DailyReminderItem {
+  booking: Booking
+  service: Service
+}
+
+/**
+ * The morning digest — one email listing every (non-cancelled) booking for
+ * `date`, sent by the cron route. Takes an already-resolved list rather
+ * than querying itself, so this function stays a pure "turn data into an
+ * email" step, same split as sendBookingNotification/the route that calls
+ * it — the route owns "what counts as today's bookings," this just
+ * formats and sends.
+ */
+export async function sendDailyReminder(
+  date: string,
+  items: DailyReminderItem[],
+  client: EmailClient = defaultClient,
+): Promise<void> {
+  const content = await getSiteContent()
+  const to = content.contactEmail
+
+  const subject =
+    items.length === 1
+      ? `Today: 1 booking (${date})`
+      : `Today: ${items.length} bookings (${date})`
+
+  const lines = items.map(
+    ({ booking, service }) => `${booking.time} — ${service.name} — ${booking.clientName} (${booking.clientPhone})`,
+  )
+  const text = [`Bookings for ${date}:`, ``, ...lines].join('\n')
+  const html = `
+    <p>Bookings for ${date}:</p>
+    <ul>
+      ${items
+        .map(
+          ({ booking, service }) =>
+            `<li><strong>${booking.time}</strong> — ${service.name} — ${booking.clientName} (${booking.clientPhone})</li>`,
+        )
+        .join('\n      ')}
+    </ul>
+  `
+
+  await client.send({ to, subject, html, text })
+}

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { resetDbForTests } from '../../lib/db'
 import { updateSiteContent, getSiteContent } from '../../lib/settings'
-import { sendBookingNotification, type EmailClient } from '../../lib/email'
+import { sendBookingNotification, sendDailyReminder, type EmailClient } from '../../lib/email'
 import type { Booking } from '../../lib/bookings'
 import type { Service } from '../../lib/services'
 
@@ -77,5 +77,51 @@ describe('sendBookingNotification', () => {
     await sendBookingNotification(booking, service, client)
 
     expect(calls[0].to).toBe(contactEmail)
+  })
+})
+
+describe('sendDailyReminder', () => {
+  const secondBooking: Booking = {
+    ...booking,
+    id: 2,
+    clientName: 'Sam Smith',
+    time: '14:30',
+  }
+  const secondService: Service = {
+    ...service,
+    id: 2,
+    name: 'Brow Tinting',
+  }
+
+  it('lists every booking for the date, ordered as given, with a count in the subject', async () => {
+    await updateSiteContent({ contactEmail: 'owner@sabrinabeauty.uk' })
+    const { client, calls } = fakeClient()
+
+    await sendDailyReminder(
+      '2026-09-15',
+      [
+        { booking, service },
+        { booking: secondBooking, service: secondService },
+      ],
+      client,
+    )
+
+    expect(calls).toHaveLength(1)
+    expect(calls[0].to).toBe('owner@sabrinabeauty.uk')
+    expect(calls[0].subject).toBe('Today: 2 bookings (2026-09-15)')
+    for (const body of [calls[0].text, calls[0].html]) {
+      expect(body).toContain('10:00')
+      expect(body).toContain('Jo Bloggs')
+      expect(body).toContain('14:30')
+      expect(body).toContain('Sam Smith')
+    }
+  })
+
+  it('uses singular phrasing for exactly one booking', async () => {
+    const { client, calls } = fakeClient()
+
+    await sendDailyReminder('2026-09-15', [{ booking, service }], client)
+
+    expect(calls[0].subject).toBe('Today: 1 booking (2026-09-15)')
   })
 })
